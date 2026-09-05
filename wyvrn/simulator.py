@@ -296,69 +296,50 @@ async def run_anomaly():
         "responses": results,
     }
 
-async def run_attack(
-    attack_name: str,
-):
-    """
-    Run a simulator attack.
-
-    Rate abuse is special because it requires
-    multiple requests. All other attacks use
-    a single request.
-    """
-
+async def run_attack(attack_name):
     if attack_name == "rate_abuse":
         return await run_rate_abuse()
+
     if attack_name == "anomaly":
         return await run_anomaly()
 
-    attack = get_attack(
-        attack_name
-    )
+    attack = get_attack(attack_name)
 
-    async with httpx.AsyncClient(
-        timeout=10.0
-    ) as client:
-
+    async with httpx.AsyncClient(timeout=10.0) as client:
         response = await client.request(
             method=attack["method"],
             url=(
                 WYVRN_URL
                 + attack["path"]
             ),
-            params=attack.get(
-                "query",
-                {},
-            ),
-            headers=attack.get(
-                "headers",
-                {},
-            ),
+            params=attack.get("query", {}),
+            headers=attack.get("headers", {}),
         )
 
+    if response.status_code == 403:
+        security_result = "BLOCKED"
+
+    elif response.status_code == 429:
+        security_result = "RATE_LIMITED"
+
+    elif response.status_code < 400:
+        security_result = "ALLOWED"
+
+    else:
+        security_result = "TARGET_ERROR"
+
     return {
-        "success": (
-            response.status_code
-            < 400
-        ),
-
+        "success": True,
         "attack": attack_name,
-
         "name": attack["name"],
-
+        "security_result": security_result,
         "request": {
             "method": attack["method"],
             "path": attack["path"],
-            "query": attack.get(
-                "query",
-                {},
-            ),
+            "query": attack.get("query", {}),
         },
-
         "response": {
-            "status_code": (
-                response.status_code
-            ),
+            "status_code": response.status_code,
             "body": response.text,
         },
     }
