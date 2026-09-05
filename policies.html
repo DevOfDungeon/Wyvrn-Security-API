@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WYVRN Policy Actions</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Inter,sans-serif;
+}
+
+body{
+background:#0b1020;
+color:white;
+padding:30px;
+}
+
+.card{
+background:#111827;
+padding:25px;
+border-radius:15px;
+margin-bottom:20px;
+}
+
+button{
+padding:12px 18px;
+margin-right:10px;
+margin-top:15px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+font-weight:bold;
+}
+
+.block{
+background:#dc2626;
+color:white;
+}
+
+.limit{
+background:#f59e0b;
+color:white;
+}
+
+.mfa{
+background:#2563eb;
+color:white;
+}
+
+.result{
+margin-top:20px;
+padding:15px;
+background:#1f2937;
+border-radius:10px;
+display:none;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>Policy Response Center</h1>
+
+<div class="card">
+
+<h3>GET /api/admin</h3>
+
+<p>Critical Privilege Escalation Risk Detected</p>
+
+<button class="block" onclick="takeAction('Endpoint Blocked')">
+Block Endpoint
+</button>
+
+<button class="limit" onclick="takeAction('Rate Limiting Enabled')">
+Enable Rate Limit
+</button>
+
+<button class="mfa" onclick="takeAction('MFA Enforcement Enabled')">
+Require MFA
+</button>
+
+<div id="result" class="result"></div>
+
+</div>
+
+<script>
+
+function takeAction(action){
+
+const result =
+document.getElementById("result");
+
+result.style.display = "block";
+
+result.innerHTML =
+"✅ Action Executed: " + action;
+
+}
+
+</script>
+
+</body>
+</html>
