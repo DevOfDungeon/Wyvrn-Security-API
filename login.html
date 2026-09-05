@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>WYVRN Login</title>
+
+<link rel="stylesheet" href="login.css">
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="login-card">
+
+        <h1>WYVRN</h1>
+
+        <p>API Security Control Plane</p>
+
+        <form id="loginForm">
+
+            <input
+                type="email"
+                id="email"
+                placeholder="Email"
+                required
+            >
+
+            <input
+                type="password"
+                id="password"
+                placeholder="Password"
+                required
+            >
+
+            <select id="role">
+
+                <option value="admin">
+                    Admin
+                </option>
+
+                <option value="user">
+                    Developer
+                </option>
+
+            </select>
+
+            <button type="submit">
+                Login
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+<script src="login.js"></script>
+
+</body>
+</html>
