@@ -70,4 +70,125 @@ body::before {
 
     z-index: -1;
 }
+/* =========================================================
+   FRAME
+========================================================= */
 
+.app-shell {
+    width: min(100%, 430px);
+
+    min-height: 100vh;
+
+    margin: 0 auto;
+
+    position: relative;
+
+    overflow: hidden;
+
+    padding:
+        18px
+        16px
+        40px;
+}
+
+
+/* =========================================================
+   GRAIN
+========================================================= */
+
+.grain {
+    position: fixed;
+
+    inset: 0;
+
+    pointer-events: none;
+
+    opacity: 0.045;
+
+    z-index: 100;
+
+    background-image:
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+
+/* =========================================================
+   CONFETTI
+========================================================= */
+
+.confetti {
+    position: absolute;
+
+    width: 9px;
+
+    height: 9px;
+
+    background: var(--gold-bright);
+
+    opacity: 0.55;
+
+    animation:
+        float 5s ease-in-out infinite;
+}
+
+.confetti-1 {
+    top: 120px;
+    right: 20px;
+
+    transform: rotate(30deg);
+}
+
+.confetti-2 {
+    top: 310px;
+    left: 8px;
+
+    width: 6px;
+    height: 6px;
+
+    border-radius: 50%;
+
+    background: var(--gold-pale);
+
+    animation-delay: 1s;
+}
+
+.confetti-3 {
+    top: 720px;
+    right: 15px;
+
+    clip-path:
+        polygon(
+            50% 0,
+            100% 100%,
+            0 100%
+        );
+
+    animation-delay: 2s;
+}
+
+.confetti-4 {
+    top: 1100px;
+    left: 25px;
+
+    width: 7px;
+    height: 13px;
+
+    background: var(--gold-deep);
+
+    transform: rotate(20deg);
+
+    animation-delay: 0.5s;
+}
+
+@keyframes float {
+    0%,
+    100% {
+        translate: 0 0;
+        rotate: 0deg;
+    }
+
+    50% {
+        translate: 0 -8px;
+        rotate: 8deg;
+    }
+}
