@@ -171,3 +171,45 @@ async function loadEvents() {
     }
 
 }
+
+
+// =========================================================
+// THREATS
+// =========================================================
+
+async function loadThreats() {
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_BASE}/api/threats`
+            );
+
+        if (!response.ok) {
+            return;
+        }
+
+        const data =
+            await response.json();
+
+        if (
+            data &&
+            Array.isArray(data.threats)
+        ) {
+
+            $("#threatCount").textContent =
+                data.threats.length;
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Could not load threats:",
+            error
+        );
+
+    }
+
+}
