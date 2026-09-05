@@ -45,3 +45,79 @@ document.addEventListener(
 
     }
 );
+
+
+// =========================================================
+// STATS
+// =========================================================
+
+async function loadStats() {
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_BASE}/api/stats`
+            );
+
+        if (!response.ok) {
+            throw new Error(
+                "Stats request failed"
+            );
+        }
+
+        stats =
+            await response.json();
+
+        updateStats();
+
+    } catch (error) {
+
+        console.error(
+            "Could not load stats:",
+            error
+        );
+
+    }
+
+}
+
+
+function updateStats() {
+
+    const total =
+        stats.total_events ??
+        stats.total_requests ??
+        0;
+
+    const blocked =
+        stats.blocked ??
+        stats.blocked_requests ??
+        0;
+
+    const rateLimited =
+        stats.rate_limited ??
+        stats.rate_limit ??
+        stats.rate_limited_requests ??
+        0;
+
+    const threats =
+        stats.threats ??
+        stats.total_threats ??
+        0;
+
+    $("#totalRequests").textContent =
+        formatNumber(total);
+
+    $("#blockedRequests").textContent =
+        formatNumber(blocked);
+
+    $("#rateLimited").textContent =
+        formatNumber(rateLimited);
+
+    $("#threatCount").textContent =
+        formatNumber(threats);
+
+    calculateOverallRisk();
+
+}
