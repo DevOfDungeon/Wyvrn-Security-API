@@ -628,3 +628,211 @@ body::before {
     animation: livePulse 1.4s infinite;
 }
 
+/* =========================================================
+   CAMPAIGN
+========================================================= */
+
+.campaign-card {
+    position: relative;
+
+    padding: 23px;
+
+    margin:
+        20px
+        0
+        35px;
+
+    border-radius: 20px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #211a12,
+            #100f0d
+        );
+
+    border:
+        1px solid
+        rgba(240,200,120,0.4);
+
+    box-shadow:
+        0 20px 50px rgba(0,0,0,0.5);
+
+    transform: rotate(-1deg);
+
+    overflow: hidden;
+}
+
+.campaign-card::before {
+    content: "";
+
+    position: absolute;
+
+    width: 170px;
+    height: 170px;
+
+    right: -80px;
+    top: -80px;
+
+    border:
+        1px solid
+        rgba(240,200,120,0.15);
+
+    border-radius: 50%;
+
+    box-shadow:
+        0 0 0 20px rgba(240,200,120,0.025),
+        0 0 0 40px rgba(240,200,120,0.02);
+}
+
+.campaign-stamp {
+    position: absolute;
+
+    top: 18px;
+    right: 16px;
+
+    padding:
+        6px
+        10px;
+
+    border:
+        1px solid
+        var(--red);
+
+    color: var(--red);
+
+    font-size: 7px;
+
+    letter-spacing: 1.5px;
+
+    transform: rotate(6deg);
+}
+
+.campaign-header {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: flex-start;
+}
+
+.campaign-header h2 {
+    margin:
+        10px
+        0
+        12px;
+
+    font-family: "Bebas Neue";
+
+    font-size: 48px;
+
+    line-height: 0.78;
+}
+
+.campaign-score {
+    font-family: "Bebas Neue";
+
+    font-size: 64px;
+
+    color: var(--gold-bright);
+
+    line-height: 0.8;
+}
+
+.campaign-severity {
+    display: inline-block;
+
+    padding:
+        6px
+        11px;
+
+    background: var(--gold-bright);
+
+    color: var(--black);
+
+    border-radius: 20px;
+
+    font-size: 7px;
+
+    font-weight: 700;
+
+    letter-spacing: 1.3px;
+}
+
+.campaign-card p {
+    color: var(--cream-dim);
+
+    font-size: 11px;
+
+    line-height: 1.6;
+
+    max-width: 290px;
+}
+
+.campaign-detections {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 6px;
+
+    margin-top: 15px;
+}
+
+.detection-pill {
+    padding:
+        6px
+        9px;
+
+    border-radius: 20px;
+
+    background:
+        rgba(240,200,120,0.1);
+
+    border:
+        1px solid
+        rgba(240,200,120,0.22);
+
+    color: var(--gold-pale);
+
+    font-size: 7px;
+
+    letter-spacing: 0.8px;
+}
+
+.campaign-line {
+    height: 1px;
+
+    background:
+        rgba(240,200,120,0.15);
+
+    margin:
+        20px
+        0
+        12px;
+}
+
+.campaign-meta {
+    display: flex;
+
+    justify-content: space-between;
+
+    margin-top: 8px;
+
+    font-size: 8px;
+}
+
+.campaign-meta span {
+    color: var(--cream-dim);
+
+    letter-spacing: 1.2px;
+}
+
+.campaign-meta strong {
+    color: var(--gold-pale);
+}
+
+.hidden {
+    display: none;
+}
+
