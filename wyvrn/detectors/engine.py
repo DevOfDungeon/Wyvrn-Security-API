@@ -17,15 +17,31 @@ def make_finding(
     }
 
 
-def run_detectors(request_event: Dict[str, Any]) -> List[Dict[str, Any]]:
+def run_detectors(
+    request_event: Dict[str, Any],
+) -> List[Dict[str, Any]]:
+
     findings = []
 
     from wyvrn.detectors.auth import detect_auth_abuse
     from wyvrn.detectors.bola import detect_bola
     from wyvrn.detectors.rate_limit import detect_rate_abuse
+    from wyvrn.detectors.injection import detect_injection
 
-    findings.extend(detect_auth_abuse(request_event))
-    findings.extend(detect_bola(request_event))
-    findings.extend(detect_rate_abuse(request_event))
+    findings.extend(
+        detect_auth_abuse(request_event)
+    )
+
+    findings.extend(
+        detect_bola(request_event)
+    )
+
+    findings.extend(
+        detect_rate_abuse(request_event)
+    )
+
+    findings.extend(
+        detect_injection(request_event)
+    )
 
     return findings
