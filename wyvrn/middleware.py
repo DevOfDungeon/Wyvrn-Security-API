@@ -17,6 +17,9 @@ from wyvrn.detectors.anomaly import detect_behavioral_anomaly
 from wyvrn.risk import calculate_risk
 from wyvrn.policy import evaluate_policy
 
+from wyvrn.events import build_security_event
+from wyvrn.store import store_event
+
 
 class WyvrnMiddleware(BaseHTTPMiddleware):
 
@@ -137,6 +140,17 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
                 f"Reason: {request_policy['reason']}"
             )
 
+            # Store blocked request as an event
+            security_event = build_security_event(
+                request_event=request_event,
+                response_event=None,
+                findings=request_findings,
+                risk_result=request_risk,
+                policy_result=request_policy,
+            )
+
+            store_event(security_event)
+
             return JSONResponse(
                 status_code=403,
                 content={
@@ -164,6 +178,17 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
                 f"Reason: {request_policy['reason']}"
             )
 
+            # Store rate-limited request as an event
+            security_event = build_security_event(
+                request_event=request_event,
+                response_event=None,
+                findings=request_findings,
+                risk_result=request_risk,
+                policy_result=request_policy,
+            )
+
+            store_event(security_event)
+
             return JSONResponse(
                 status_code=429,
                 content={
@@ -180,7 +205,7 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
             )
 
         # ============================================================
-        # CONTINUE REQUEST
+        # CONTINUE REQUEST TO TARGET API
         # ============================================================
 
         response = await call_next(
@@ -283,6 +308,22 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
         }
 
         # ============================================================
+        # BUILD + STORE SECURITY EVENT
+        # ============================================================
+
+        security_event = build_security_event(
+            request_event=request_event,
+            response_event=response_event,
+            findings=all_findings,
+            risk_result=final_risk,
+            policy_result=final_policy,
+        )
+
+        store_event(
+            security_event
+        )
+
+        # ============================================================
         # LOG FINAL SECURITY DECISION
         # ============================================================
 
@@ -293,13 +334,7 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
 
         print(
             json.dumps(
-                {
-                    "request_id": request_id,
-                    "request": request_event,
-                    "response": response_event,
-                    "risk": final_risk,
-                    "policy": final_policy,
-                },
+                security_event,
                 indent=2,
             )
         )

@@ -4,6 +4,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import Response
 
 from wyvrn.middleware import WyvrnMiddleware
+from wyvrn.store import get_events, get_event_count
 
 
 app = FastAPI(
@@ -15,11 +16,26 @@ app = FastAPI(
     version="0.1.0",
 )
 
-app.add_middleware(WyvrnMiddleware)
 
+# ============================================================
+# WYVRN MIDDLEWARE
+# ============================================================
+
+app.add_middleware(
+    WyvrnMiddleware
+)
+
+
+# ============================================================
+# TARGET API
+# ============================================================
 
 TARGET_API = "http://127.0.0.1:8000"
 
+
+# ============================================================
+# WYVRN ROOT
+# ============================================================
 
 @app.get("/")
 async def home():
@@ -31,6 +47,10 @@ async def home():
     }
 
 
+# ============================================================
+# WYVRN HEALTH
+# ============================================================
+
 @app.get("/health")
 async def health():
     return {
@@ -38,6 +58,40 @@ async def health():
         "status": "healthy",
     }
 
+
+# ============================================================
+# SECURITY EVENTS
+# ============================================================
+
+@app.get("/api/events")
+async def security_events(
+    limit: int = 100,
+):
+    return {
+        "events": get_events(limit),
+        "count": get_event_count(),
+    }
+
+
+@app.get("/api/events/{request_id}")
+async def security_event(
+    request_id: str,
+):
+    events = get_events(1000)
+
+    for event in events:
+        if event["request_id"] == request_id:
+            return event
+
+    return {
+        "error": "Security event not found",
+        "request_id": request_id,
+    }
+
+
+# ============================================================
+# PROXY
+# ============================================================
 
 @app.api_route(
     "/proxy/{path:path}",
@@ -51,18 +105,20 @@ async def health():
         "HEAD",
     ],
 )
-async def proxy(path: str, request: Request):
-    """
-    Forward requests from WYVRN to the target API.
-    """
-
+async def proxy(
+    path: str,
+    request: Request,
+):
     target_url = f"{TARGET_API}/{path}"
 
+    # Forward query parameters
     if request.url.query:
         target_url += f"?{request.url.query}"
 
+    # Capture request body
     body = await request.body()
 
+    # Headers that should not be forwarded
     excluded_headers = {
         "host",
         "content-length",
@@ -74,7 +130,12 @@ async def proxy(path: str, request: Request):
         if key.lower() not in excluded_headers
     }
 
+    # ========================================================
+    # FORWARD REQUEST TO TARGET API
+    # ========================================================
+
     try:
+
         async with httpx.AsyncClient(
             timeout=10.0
         ) as client:
@@ -94,6 +155,10 @@ async def proxy(path: str, request: Request):
             media_type="application/json",
         )
 
+    # ========================================================
+    # RESPONSE HEADERS
+    # ========================================================
+
     excluded_response_headers = {
         "content-length",
         "transfer-encoding",
@@ -105,6 +170,10 @@ async def proxy(path: str, request: Request):
         for key, value in upstream_response.headers.items()
         if key.lower() not in excluded_response_headers
     }
+
+    # ========================================================
+    # RETURN TARGET RESPONSE
+    # ========================================================
 
     return Response(
         content=upstream_response.content,
