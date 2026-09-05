@@ -301,3 +301,98 @@ body::before {
     }
 }
 
+/* =========================================================
+   HERO
+========================================================= */
+
+.hero {
+    position: relative;
+
+    margin-bottom: 32px;
+}
+
+.hero-eyebrow,
+.eyebrow {
+    font-size: 8px;
+
+    letter-spacing: 2px;
+
+    color: var(--gold-bright);
+
+    font-weight: 700;
+}
+
+.hero h1 {
+    margin:
+        13px
+        0
+        18px;
+
+    font-family: "Bebas Neue";
+
+    font-size: 82px;
+
+    line-height: 0.77;
+
+    letter-spacing: -1px;
+}
+
+.hero h1 span {
+    color: transparent;
+
+    -webkit-text-stroke:
+        1px var(--gold-bright);
+}
+
+.hero-copy {
+    max-width: 310px;
+
+    margin: 0;
+
+    font-size: 13px;
+
+    line-height: 1.65;
+
+    color: var(--cream-dim);
+}
+
+.hero-status {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 8px;
+
+    margin-top: 22px;
+
+    padding:
+        9px
+        14px;
+
+    background: var(--gold-bright);
+
+    color: var(--black);
+
+    border-radius: 20px;
+
+    font-size: 8px;
+
+    font-weight: 700;
+
+    letter-spacing: 1.5px;
+
+    transform: rotate(-2deg);
+
+    box-shadow:
+        5px 6px 0 var(--gold-deep);
+}
+
+.status-pulse {
+    width: 6px;
+    height: 6px;
+
+    border-radius: 50%;
+
+    background: var(--black);
+}
+
