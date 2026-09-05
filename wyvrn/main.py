@@ -1,9 +1,5 @@
 import json
 
-import httpx
-
-from wyvrn.simulator import get_attack, list_attacks
-
 from fastapi import FastAPI, Request, WebSocket
 from fastapi.responses import Response
 
@@ -18,6 +14,11 @@ from wyvrn.policy import (
 from wyvrn.ws import (
     add_connection,
     remove_connection,
+)
+
+from wyvrn.simulator import (
+    list_attacks,
+    run_attack,
 )
 
 
@@ -162,27 +163,35 @@ async def security_stats():
         )
 
         if action == "BLOCK":
+
             blocked += 1
 
         elif action == "RATE_LIMIT":
+
             rate_limited += 1
 
         elif action == "MONITOR":
+
             monitored += 1
 
         else:
+
             allowed += 1
 
         if risk_level == "CRITICAL":
+
             critical += 1
 
         elif risk_level == "HIGH":
+
             high += 1
 
         elif risk_level == "MEDIUM":
+
             medium += 1
 
         else:
+
             low += 1
 
         for detection in risk.get(
@@ -245,10 +254,9 @@ async def threats():
         )
 
         if not detections:
+
             continue
 
-        # The method/path are stored inside
-        # the "request" object by build_security_event().
         request_data = event.get(
             "request",
             {},
@@ -353,7 +361,9 @@ async def replace_policies(
                 content=(
                     '{"error":"policies must be an object"}'
                 ),
+
                 status_code=400,
+
                 media_type="application/json",
             )
 
@@ -374,7 +384,9 @@ async def replace_policies(
                     "error": str(exc)
                 }
             ),
+
             status_code=400,
+
             media_type="application/json",
         )
 
@@ -384,7 +396,9 @@ async def replace_policies(
             content=(
                 '{"error":"Invalid JSON payload"}'
             ),
+
             status_code=400,
+
             media_type="application/json",
         )
 
@@ -409,6 +423,7 @@ async def websocket_events(
         await websocket.send_json(
             {
                 "type": "connection",
+
                 "message": (
                     "Connected to WYVRN "
                     "live security events."
@@ -426,63 +441,49 @@ async def websocket_events(
             websocket
         )
 
+
+# ============================================================
+# ATTACK SIMULATOR
+# ============================================================
+
 @app.get("/api/simulator/attacks")
 async def simulator_attacks():
+
     return {
         "attacks": list_attacks()
     }
 
 
-@app.post("/api/simulator/run/{attack_name}")
-async def simulator_run(attack_name: str):
+@app.post(
+    "/api/simulator/run/{attack_name}"
+)
+async def simulator_run(
+    attack_name: str,
+):
+
     try:
-        attack = get_attack(attack_name)
+
+        result = await run_attack(
+            attack_name
+        )
+
+        return result
+
     except ValueError as exc:
+
         return {
             "success": False,
             "error": str(exc),
-        }
-
-    method = attack["method"]
-    path = attack["path"]
-    query = attack.get("query", {})
-    headers = attack.get("headers", {})
-    body = attack.get("body")
-
-    url = f"http://127.0.0.1:9000{path}"
-
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.request(
-                method=method,
-                url=url,
-                params=query,
-                headers=headers,
-                json=body,
-                timeout=10.0,
-            )
-
-        return {
-            "success": True,
-            "attack": attack_name,
-            "name": attack["name"],
-            "request": {
-                "method": method,
-                "path": path,
-                "query": query,
-            },
-            "response": {
-                "status_code": response.status_code,
-                "body": response.text[:2000],
-            },
         }
 
     except Exception as exc:
+
         return {
             "success": False,
             "attack": attack_name,
             "error": str(exc),
         }
+
 
 # ============================================================
 # TARGET API PROXY
@@ -538,8 +539,11 @@ async def proxy(
             upstream_response = (
                 await client.request(
                     method=request.method,
+
                     url=target_url,
+
                     headers=headers,
+
                     content=body,
                 )
             )
@@ -550,7 +554,9 @@ async def proxy(
             content=(
                 '{"error":"Target API unavailable"}'
             ),
+
             status_code=502,
+
             media_type="application/json",
         )
 
@@ -569,10 +575,12 @@ async def proxy(
 
     return Response(
         content=upstream_response.content,
+
         status_code=upstream_response.status_code,
+
         headers=response_headers,
+
         media_type=upstream_response.headers.get(
             "content-type"
         ),
     )
-
