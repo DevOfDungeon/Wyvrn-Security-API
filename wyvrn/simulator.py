@@ -1,63 +1,22 @@
-from typing import Any, Dict
-
-
-ATTACKS: Dict[str, Dict[str, Any]] = {
-    "sql_injection": {
-        "name": "SQL Injection",
-        "method": "GET",
-        "path": "/proxy/search",
-        "query": {
-            "q": "' OR 1=1 --"
-        },
-    },
-    "bola_idor": {
-        "name": "BOLA / IDOR",
-        "method": "GET",
-        "path": "/proxy/users/9999",
-        "query": {},
-    },
-    "auth_abuse": {
-        "name": "Authentication Abuse",
-        "method": "GET",
-        "path": "/proxy/admin",
-        "query": {},
-        "headers": {
-            "authorization": "Bearer invalid-token"
-        },
-    },
-    "sensitive_data": {
-        "name": "Sensitive Data Exposure",
-        "method": "GET",
-        "path": "/proxy/users",
-        "query": {},
-    },
-    "rate_abuse": {
-        "name": "Rate Abuse",
-        "method": "GET",
-        "path": "/proxy/health",
-        "query": {},
-    },
-    "anomaly": {import asyncio
+import asyncio
 
 import httpx
 
-
-# ---------------------------------------------------------------------------
-# Attack definitions
-# ---------------------------------------------------------------------------
 
 ATTACKS = {
     "sql_injection": {
         "name": "SQL Injection",
         "method": "GET",
         "path": "/proxy/search",
-        "query": {"q": "' OR 1=1 --"},
+        "query": {
+            "q": "' OR 1=1 --",
+        },
     },
 
     "bola_idor": {
         "name": "BOLA / IDOR",
         "method": "GET",
-        "path": "/proxy/users/9999",
+        "path": "/proxy/users/42",
         "query": {},
     },
 
@@ -67,14 +26,14 @@ ATTACKS = {
         "path": "/proxy/admin",
         "query": {},
         "headers": {
-            "authorization": "Bearer invalid-token",
+            "Authorization": "Bearer invalid-token",
         },
     },
 
     "sensitive_data": {
         "name": "Sensitive Data Exposure",
         "method": "GET",
-        "path": "/proxy/users",
+        "path": "/proxy/profile",
         "query": {},
     },
 
@@ -87,75 +46,48 @@ ATTACKS = {
 
     "anomaly": {
         "name": "Behavioral Anomaly",
-        "method": "POST",
+        "method": "GET",
         "path": "/proxy/search",
-        "query": {},
-        "body": {
-            "payload": (
-                "ANOMALOUS_REQUEST_"
-                + ("X" * 5000)
-            ),
+        "query": {
+            "q": "normal-search",
         },
     },
 }
 
-
-# ---------------------------------------------------------------------------
-# Configuration
-# ---------------------------------------------------------------------------
 
 WYVRN_URL = "http://127.0.0.1:9000"
 
 RATE_ABUSE_REQUEST_COUNT = 15
 
 
-def get_attack(
-    attack_name: str,
-):
-    """
-    Return a copy of a predefined attack configuration.
-    """
+def get_attack(attack_name: str):
+    attack = ATTACKS.get(attack_name)
 
-    if attack_name not in ATTACKS:
+    if attack is None:
         raise ValueError(
             f"Unknown attack: {attack_name}"
         )
 
-    return dict(
-        ATTACKS[attack_name]
-    )
+    return attack
 
 
 def list_attacks():
-    """
-    Return attack metadata for the dashboard.
-    """
-
     return [
         {
-            "id": attack_id,
-            "name": attack["name"],
-            "method": attack["method"],
-            "path": attack["path"],
+            "id": attack_name,
+            **attack,
         }
-        for attack_id, attack
-        in ATTACKS.items()
+        for attack_name, attack in ATTACKS.items()
     ]
 
 
 async def run_rate_abuse():
     """
-    Generate a burst of requests against WYVRN.
-
-    The detector uses a rolling per-IP window.
-    Sending more than MAX_REQUESTS_PER_WINDOW
-    requests inside that window should cause
-    WYVRN to return HTTP 429.
+    Send a burst of requests from the same client so that
+    the RATE_ABUSE detector can observe repeated traffic.
     """
 
-    attack = ATTACKS[
-        "rate_abuse"
-    ]
+    attack = ATTACKS["rate_abuse"]
 
     results = []
 
@@ -166,9 +98,7 @@ async def run_rate_abuse():
         for index in range(
             RATE_ABUSE_REQUEST_COUNT
         ):
-
             try:
-
                 response = await client.request(
                     method=attack["method"],
                     url=(
@@ -177,6 +107,10 @@ async def run_rate_abuse():
                     ),
                     params=attack.get(
                         "query",
+                        {},
+                    ),
+                    headers=attack.get(
+                        "headers",
                         {},
                     ),
                 )
@@ -189,38 +123,35 @@ async def run_rate_abuse():
                         "status_code": (
                             response.status_code
                         ),
-                        "body": (
-                            response.text
-                        ),
+                        "body": response.text,
                     }
                 )
 
             except Exception as exc:
-
                 results.append(
                     {
                         "request_number": (
                             index + 1
                         ),
                         "status_code": None,
-                        "body": str(exc),
+                        "error": str(exc),
                     }
                 )
 
-            # Yield control to the event loop without
-            # introducing meaningful delay between requests.
+            # Yield control so the burst remains
+            # asynchronous without adding meaningful delay.
             await asyncio.sleep(0)
 
     allowed = sum(
         1
         for result in results
-        if result["status_code"] == 200
+        if result.get("status_code") == 200
     )
 
     rate_limited = sum(
         1
         for result in results
-        if result["status_code"] == 429
+        if result.get("status_code") == 429
     )
 
     return {
@@ -255,21 +186,16 @@ async def run_attack(
     """
     Run a simulator attack.
 
-    Rate Abuse requires multiple requests,
-    so it has a dedicated burst implementation.
+    Rate abuse is special because it requires
+    multiple requests. All other attacks use
+    a single request.
     """
 
     if attack_name == "rate_abuse":
-
         return await run_rate_abuse()
 
     attack = get_attack(
         attack_name
-    )
-
-    url = (
-        WYVRN_URL
-        + attack["path"]
     )
 
     async with httpx.AsyncClient(
@@ -278,26 +204,25 @@ async def run_attack(
 
         response = await client.request(
             method=attack["method"],
-
-            url=url,
-
+            url=(
+                WYVRN_URL
+                + attack["path"]
+            ),
             params=attack.get(
                 "query",
                 {},
             ),
-
             headers=attack.get(
                 "headers",
                 {},
             ),
-
-            json=attack.get(
-                "body"
-            ),
         )
 
     return {
-        "success": True,
+        "success": (
+            response.status_code
+            < 400
+        ),
 
         "attack": attack_name,
 
