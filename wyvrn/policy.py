@@ -36,15 +36,93 @@ VALID_ACTIONS = {
 
 
 # ============================================================
+# POLICY CONFIGURATION
+# ============================================================
+
+def get_policies() -> Dict[str, str]:
+    """
+    Return a copy of the current detection policies.
+    """
+
+    return DETECTION_POLICIES.copy()
+
+
+def set_policies(
+    policies: Dict[str, str],
+) -> Dict[str, str]:
+    """
+    Replace the current detection policies.
+
+    Only known security actions are accepted.
+    """
+
+    for detection, action in policies.items():
+
+        if action not in VALID_ACTIONS:
+            raise ValueError(
+                f"Invalid policy action '{action}' "
+                f"for detection '{detection}'. "
+                f"Valid actions: "
+                f"{sorted(VALID_ACTIONS)}"
+            )
+
+    DETECTION_POLICIES.clear()
+    DETECTION_POLICIES.update(
+        policies
+    )
+
+    return get_policies()
+
+
+def update_policy(
+    detection: str,
+    action: str,
+) -> Dict[str, str]:
+    """
+    Update one detection policy.
+    """
+
+    if action not in VALID_ACTIONS:
+        raise ValueError(
+            f"Invalid policy action '{action}'. "
+            f"Valid actions: "
+            f"{sorted(VALID_ACTIONS)}"
+        )
+
+    DETECTION_POLICIES[
+        detection
+    ] = action
+
+    return get_policies()
+
+
+def reset_policies() -> Dict[str, str]:
+    """
+    Restore the default WYVRN policies.
+    """
+
+    DETECTION_POLICIES.clear()
+
+    DETECTION_POLICIES.update(
+        {
+            "SQL_INJECTION": "BLOCK",
+            "SENSITIVE_DATA_EXPOSURE": "BLOCK",
+            "BOLA_IDOR": "MONITOR",
+            "RATE_ABUSE": "RATE_LIMIT",
+            "AUTH_ABUSE": "RATE_LIMIT",
+        }
+    )
+
+    return get_policies()
+
+
+# ============================================================
 # RISK-BASED POLICY DECISION
 # ============================================================
 
 def decide_action(
     risk_score: int,
 ) -> str:
-    """
-    Convert an overall risk score into a security action.
-    """
 
     if risk_score >= BLOCK_THRESHOLD:
         return "BLOCK"
@@ -65,17 +143,9 @@ def decide_action(
 def get_detection_override(
     detections,
 ) -> tuple[str | None, str | None]:
-    """
-    Check whether any detected threat has a
-    detection-specific policy override.
-
-    Returns:
-        (action, detection)
-
-    The first matching override is returned.
-    """
 
     for detection in detections:
+
         action = DETECTION_POLICIES.get(
             detection
         )
@@ -109,17 +179,9 @@ def evaluate_policy(
         [],
     )
 
-    # --------------------------------------------------------
-    # First apply normal risk-score policy
-    # --------------------------------------------------------
-
     risk_action = decide_action(
         risk_score
     )
-
-    # --------------------------------------------------------
-    # Then check detection-specific overrides
-    # --------------------------------------------------------
 
     override_action, override_detection = (
         get_detection_override(
@@ -128,6 +190,7 @@ def evaluate_policy(
     )
 
     if override_action:
+
         action = override_action
 
         reason = (
@@ -137,9 +200,12 @@ def evaluate_policy(
             f"is {override_action}."
         )
 
-        policy_source = "DETECTION_OVERRIDE"
+        policy_source = (
+            "DETECTION_OVERRIDE"
+        )
 
     else:
+
         action = risk_action
 
         reason = get_policy_reason(
@@ -147,7 +213,9 @@ def evaluate_policy(
             risk_score,
         )
 
-        policy_source = "RISK_THRESHOLD"
+        policy_source = (
+            "RISK_THRESHOLD"
+        )
 
     return {
         "action": action,
