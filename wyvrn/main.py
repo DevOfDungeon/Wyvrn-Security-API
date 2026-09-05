@@ -6,11 +6,24 @@ from fastapi import FastAPI, Request, WebSocket
 from fastapi.responses import Response
 
 from wyvrn.middleware import WyvrnMiddleware
+
 from wyvrn.store import get_events, get_event_count
+
 from wyvrn.policy import (
     get_policies,
     set_policies,
 )
+
+from wyvrn.events import (
+    add_connection,
+    remove_connection,
+)
+
+from wyvrn.ws import (
+    add_connection,
+    remove_connection,
+)
+
 
 
 # ============================================================
@@ -33,13 +46,6 @@ app.add_middleware(
 
 
 TARGET_API = "http://127.0.0.1:8000"
-
-
-# ============================================================
-# LIVE DASHBOARD CONNECTIONS
-# ============================================================
-
-ACTIVE_CONNECTIONS = set()
 
 
 # ============================================================
@@ -357,33 +363,6 @@ async def replace_policies(
 # LIVE SECURITY EVENTS
 # ============================================================
 
-async def broadcast_event(
-    event,
-):
-
-    disconnected = []
-
-    for websocket in ACTIVE_CONNECTIONS:
-
-        try:
-
-            await websocket.send_json(
-                event
-            )
-
-        except Exception:
-
-            disconnected.append(
-                websocket
-            )
-
-    for websocket in disconnected:
-
-        ACTIVE_CONNECTIONS.discard(
-            websocket
-        )
-
-
 @app.websocket("/ws/events")
 async def websocket_events(
     websocket: WebSocket,
@@ -391,7 +370,7 @@ async def websocket_events(
 
     await websocket.accept()
 
-    ACTIVE_CONNECTIONS.add(
+    add_connection(
         websocket
     )
 
@@ -413,7 +392,7 @@ async def websocket_events(
 
     except Exception:
 
-        ACTIVE_CONNECTIONS.discard(
+        remove_connection(
             websocket
         )
 

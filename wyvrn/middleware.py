@@ -26,6 +26,7 @@ from wyvrn.policy import evaluate_policy
 
 from wyvrn.events import build_security_event
 from wyvrn.store import store_event
+from wyvrn.ws import broadcast_event
 
 
 class WyvrnMiddleware(BaseHTTPMiddleware):
@@ -35,6 +36,7 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
         request: Request,
         call_next,
     ):
+
         start_time = time.perf_counter()
 
         request_id = str(
@@ -46,17 +48,22 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
         # ===================================================================
 
         try:
+
             body_bytes = await request.body()
 
             if body_bytes:
+
                 body = body_bytes.decode(
                     "utf-8",
                     errors="replace",
                 )
+
             else:
+
                 body = None
 
         except Exception:
+
             body = None
 
         request_path = request.url.path
@@ -68,15 +75,23 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
         # becomes:
         #
         # /users/1
-        if request_path.startswith("/proxy/"):
+
+        if request_path.startswith(
+            "/proxy/"
+        ):
+
             security_path = request_path[
                 len("/proxy"):
             ]
+
         else:
+
             security_path = request_path
 
         request_event = {
+
             "request_id": request_id,
+
             "timestamp": datetime.now(
                 timezone.utc
             ).isoformat(),
@@ -145,7 +160,9 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
 
             print()
             print("=" * 70)
-            print("🛑 WYVRN BLOCKED REQUEST")
+            print(
+                "🛑 WYVRN BLOCKED REQUEST"
+            )
             print("=" * 70)
 
             print(
@@ -162,6 +179,14 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
             )
 
             store_event(
+                security_event
+            )
+
+            # --------------------------------------------------------------
+            # LIVE DASHBOARD BROADCAST
+            # --------------------------------------------------------------
+
+            await broadcast_event(
                 security_event
             )
 
@@ -199,7 +224,9 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
 
             print()
             print("=" * 70)
-            print("⏳ WYVRN RATE LIMITED REQUEST")
+            print(
+                "⏳ WYVRN RATE LIMITED REQUEST"
+            )
             print("=" * 70)
 
             print(
@@ -216,6 +243,14 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
             )
 
             store_event(
+                security_event
+            )
+
+            # --------------------------------------------------------------
+            # LIVE DASHBOARD BROADCAST
+            # --------------------------------------------------------------
+
+            await broadcast_event(
                 security_event
             )
 
@@ -264,6 +299,7 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
         response_body = b""
 
         async for chunk in response.body_iterator:
+
             response_body += chunk
 
         latency_ms = (
@@ -283,6 +319,7 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
         status_code = response.status_code
 
         try:
+
             response_text = (
                 response_body.decode(
                     "utf-8",
@@ -291,6 +328,7 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
             )
 
         except Exception:
+
             response_text = None
 
         # ===================================================================
@@ -301,6 +339,7 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
         #
         # We only count the login attempt if the upstream
         # API actually returned HTTP 401.
+
         auth_findings = detect_auth_abuse(
             request_event=request_event,
             response_status_code=status_code,
@@ -353,6 +392,7 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
         )
 
         response_event = {
+
             "request_id": request_id,
 
             "status_code": status_code,
@@ -375,6 +415,14 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
         )
 
         store_event(
+            security_event
+        )
+
+        # ===================================================================
+        # LIVE DASHBOARD BROADCAST
+        # ===================================================================
+
+        await broadcast_event(
             security_event
         )
 
@@ -404,7 +452,9 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
 
             print()
             print("=" * 70)
-            print("🛑 WYVRN BLOCKED RESPONSE")
+            print(
+                "🛑 WYVRN BLOCKED RESPONSE"
+            )
             print("=" * 70)
 
             print(
