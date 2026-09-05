@@ -14,6 +14,7 @@ class SentinelMiddleware(BaseHTTPMiddleware):
 
         request_id = str(uuid.uuid4())
 
+        # Capture request information
         body = None
 
         try:
@@ -41,16 +42,18 @@ class SentinelMiddleware(BaseHTTPMiddleware):
             "body": body,
         }
 
-        request_event = {
-            "request_id": request_id,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-            "method": request.method,
-            "path": request.url.path,
-        }
-
         print("\n========== SENTINEL REQUEST ==========")
         print(request_event)
 
+        # Let request continue
         response = await call_next(request)
+
+        latency_ms = (time.time() - start_time) * 1000
+
+        print("========== SENTINEL RESPONSE =========")
+        print({
+            "status_code": response.status_code,
+            "latency_ms": round(latency_ms, 2)
+        })
 
         return response

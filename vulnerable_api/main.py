@@ -40,7 +40,7 @@ def home():
 
 @app.get("/users/{user_id}")
 def get_user(user_id: int):
-    """
+    """ 
     Intentionally vulnerable to BOLA/IDOR.
     There is currently NO authorization check.
     """
