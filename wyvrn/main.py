@@ -1,3 +1,4 @@
+```python
 import json
 
 import httpx
@@ -155,8 +156,11 @@ async def security_stats():
         )
 
         risk_level = risk.get(
-            "risk_level",
-            "LOW",
+            "level",
+            risk.get(
+                "risk_level",
+                "LOW",
+            ),
         )
 
         if action == "BLOCK":
@@ -237,41 +241,74 @@ async def threats():
             {},
         )
 
-        if not risk.get(
-            "detections"
-        ):
+        detections = risk.get(
+            "detections",
+            [],
+        )
+
+        if not detections:
             continue
+
+        # Phase 6 fix:
+        # method/path live inside event["request"]
+        request_data = event.get(
+            "request",
+            {},
+        )
+
+        policy = event.get(
+            "policy",
+            {},
+        )
 
         threats.append(
             {
                 "request_id": event.get(
                     "request_id"
                 ),
+
                 "timestamp": event.get(
                     "timestamp"
                 ),
-                "path": event.get(
+
+                "path": request_data.get(
                     "path"
                 ),
-                "method": event.get(
+
+                "method": request_data.get(
                     "method"
                 ),
+
+                "client_ip": request_data.get(
+                    "client_ip"
+                ),
+
                 "risk_score": risk.get(
-                    "risk_score",
-                    0,
+                    "score",
+                    risk.get(
+                        "risk_score",
+                        0,
+                    ),
                 ),
+
                 "risk_level": risk.get(
-                    "risk_level",
-                    "LOW",
+                    "level",
+                    risk.get(
+                        "risk_level",
+                        "LOW",
+                    ),
                 ),
-                "detections": risk.get(
-                    "detections",
-                    [],
-                ),
-                "policy": event.get(
-                    "policy",
-                    {},
-                ),
+
+                "detections": detections,
+
+                "policy": {
+                    "action": policy.get(
+                        "action"
+                    ),
+                    "reason": policy.get(
+                        "reason"
+                    ),
+                },
             }
         )
 
@@ -483,3 +520,4 @@ async def proxy(
             "content-type"
         ),
     )
+```
