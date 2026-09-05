@@ -57,6 +57,7 @@ async def health():
         "status": "healthy",
     }
 
+
 @app.get("/profile")
 async def get_profile():
 
@@ -64,6 +65,7 @@ async def get_profile():
     # This endpoint exposes sensitive user information.
 
     return USERS[1]
+
 
 @app.get("/users/{user_id}")
 async def get_user(user_id: int):
@@ -93,6 +95,22 @@ async def get_products(limit: int = 10):
 
 @app.get("/search")
 async def search(q: str):
+
+    # INTENTIONALLY ANOMALOUS:
+    # Used by the WYVRN behavioral anomaly simulator.
+    #
+    # Normal searches return a small response.
+    # The special test query creates an unusually large
+    # response so WYVRN can detect the deviation.
+
+    if q == "ANOMALY_TEST":
+        return {
+            "query": q,
+            "results": [
+                f"Anomalous result {i}"
+                for i in range(100)
+            ],
+        }
 
     return {
         "query": q,
