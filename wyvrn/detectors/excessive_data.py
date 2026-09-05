@@ -56,8 +56,21 @@ def parse_response(response_body):
 def detect_excessive_data(
     path,
     response_body,
+    status_code=200,
 ):
     findings = []
+
+    # --------------------------------------------------------
+    # Ignore error responses.
+    #
+    # A 404/401/403/500 response does not represent the
+    # successful response schema of the endpoint. Evaluating
+    # error bodies such as {"detail": "User not found"} would
+    # create false EXCESSIVE_DATA_EXPOSURE findings.
+    # --------------------------------------------------------
+
+    if status_code < 200 or status_code >= 300:
+        return findings
 
     endpoint = normalize_endpoint(path)
 
