@@ -1,1 +1,73 @@
+:root {
+    --black: #0A0908;
+    --black-soft: #11100e;
+    --gold: #C89B5A;
+    --gold-bright: #F0C878;
+    --gold-deep: #8B6F3F;
+    --gold-pale: #E8D3A0;
+    --cream: #F4EDE4;
+    --cream-dim: rgba(244,237,228,0.55);
+    --red: #ff695f;
+    --green: #b9e6a3;
+    --radius: 22px;
+
+    --shadow:
+        0 18px 40px rgba(0,0,0,0.42);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+
+    background:
+        radial-gradient(
+            circle at 50% -10%,
+            rgba(200,155,90,0.16),
+            transparent 40%
+        ),
+        var(--black);
+
+    color: var(--cream);
+
+    font-family:
+        "DM Sans",
+        sans-serif;
+
+    min-height: 100vh;
+}
+
+body::before {
+    content: "";
+
+    position: fixed;
+
+    inset: 0;
+
+    pointer-events: none;
+
+    background:
+        linear-gradient(
+            90deg,
+            rgba(255,255,255,0.018) 1px,
+            transparent 1px
+        );
+
+    background-size: 32px 32px;
+
+    mask-image:
+        linear-gradient(
+            to bottom,
+            black,
+            transparent
+        );
+
+    z-index: -1;
+}
 
