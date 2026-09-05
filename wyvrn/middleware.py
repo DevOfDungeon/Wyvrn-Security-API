@@ -5,8 +5,10 @@ from datetime import datetime, timezone
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
+from starlette.responses import Response
 
 from wyvrn.detectors.engine import run_detectors
+from wyvrn.detectors.sensitive_data import detect_sensitive_data
 
 
 class WyvrnMiddleware(BaseHTTPMiddleware):
@@ -39,18 +41,7 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
             body = None
 
         # ====================================================
-        # NORMALIZE PATH FOR SECURITY DETECTION
-        # ====================================================
-        #
-        # Incoming WYVRN request:
-        #
-        #     /proxy/users/1
-        #
-        # Actual target API path:
-        #
-        #     /users/1
-        #
-        # Detectors analyze the target API path.
+        # NORMALIZE PATH
         # ====================================================
 
         request_path = request.url.path
@@ -93,7 +84,7 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
         }
 
         # ====================================================
-        # RUN SECURITY DETECTORS
+        # REQUEST-SIDE DETECTORS
         # ====================================================
 
         findings = run_detectors(
@@ -103,11 +94,86 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
         if findings:
             print()
             print("=" * 70)
-            print("🚨 WYVRN SECURITY FINDINGS")
+            print("🚨 WYVRN REQUEST SECURITY FINDINGS")
             print("=" * 70)
 
             for finding in findings:
                 print(finding)
+
+        # ====================================================
+        # CONTINUE REQUEST
+        # ====================================================
+
+        response = await call_next(
+            request
+        )
+
+        # ====================================================
+        # CAPTURE RESPONSE BODY
+        # ====================================================
+
+        response_body = b""
+
+        async for chunk in response.body_iterator:
+            response_body += chunk
+
+        # ====================================================
+        # RESPONSE-SIDE DETECTION
+        # ====================================================
+
+        try:
+            response_text = response_body.decode(
+                "utf-8",
+                errors="replace",
+            )
+        except Exception:
+            response_text = None
+
+        response_findings = detect_sensitive_data(
+            response_text
+        )
+
+        if response_findings:
+            print()
+            print("=" * 70)
+            print("🚨 WYVRN RESPONSE SECURITY FINDINGS")
+            print("=" * 70)
+
+            for finding in response_findings:
+                print(finding)
+
+        # ====================================================
+        # COMBINE FINDINGS
+        # ====================================================
+
+        all_findings = (
+            findings
+            + response_findings
+        )
+
+        # ====================================================
+        # RESPONSE METADATA
+        # ====================================================
+
+        latency_ms = (
+            time.perf_counter()
+            - start_time
+        ) * 1000
+
+        response_event = {
+            "request_id": request_id,
+
+            "status_code": response.status_code,
+
+            "response_size": len(
+                response_body
+            ),
+
+            "latency_ms": round(
+                latency_ms,
+                2,
+            ),
+        }
 
         # ====================================================
         # LOG REQUEST
@@ -121,32 +187,6 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
         print(request_event)
 
         # ====================================================
-        # CONTINUE REQUEST
-        # ====================================================
-
-        response = await call_next(
-            request
-        )
-
-        # ====================================================
-        # CAPTURE RESPONSE
-        # ====================================================
-
-        latency_ms = (
-            time.perf_counter()
-            - start_time
-        ) * 1000
-
-        response_event = {
-            "request_id": request_id,
-            "status_code": response.status_code,
-            "latency_ms": round(
-                latency_ms,
-                2,
-            ),
-        }
-
-        # ====================================================
         # LOG RESPONSE
         # ====================================================
 
@@ -157,4 +197,14 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
 
         print(response_event)
 
-        return response
+        # ====================================================
+        # REBUILD RESPONSE
+        # ====================================================
+
+        return Response(
+            content=response_body,
+            status_code=response.status_code,
+            headers=dict(response.headers),
+            media_type=response.media_type,
+            background=response.background,
+        )
