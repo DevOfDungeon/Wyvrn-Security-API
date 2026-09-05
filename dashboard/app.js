@@ -311,3 +311,133 @@ function renderDetectionCards() {
 
 }
 
+
+// =========================================================
+// EVENT STREAM
+// =========================================================
+
+function renderEvents() {
+
+    const container =
+        $("#eventStream");
+
+    if (!events.length) {
+
+        container.innerHTML = `
+            <div class="empty-state">
+                <span>WAITING FOR TRAFFIC</span>
+
+                <small>
+                    Security events will appear here.
+                </small>
+            </div>
+        `;
+
+        return;
+    }
+
+
+    const recent =
+        [...events]
+            .reverse()
+            .slice(0, 12);
+
+
+    container.innerHTML = "";
+
+
+    recent.forEach(event => {
+
+        const element =
+            document.createElement(
+                "article"
+            );
+
+        element.className =
+            "event";
+
+
+        const detections =
+            event.risk?.detections ??
+            event.findings?.map(
+                finding =>
+                    finding.detection
+            ) ??
+            [];
+
+
+        const detection =
+            detections[0] ??
+            "TRAFFIC";
+
+
+        const request =
+            event.request ?? {};
+
+
+        const risk =
+            event.risk?.score ??
+            event.risk?.risk_score ??
+            0;
+
+
+        const action =
+            event.policy?.action ??
+            "ALLOW";
+
+
+        const timestamp =
+            event.timestamp
+                ? formatTime(
+                    event.timestamp
+                )
+                : "NOW";
+
+
+        element.innerHTML = `
+
+            <div class="event-top">
+
+                <div class="event-detection">
+                    ${formatDetection(detection)}
+                </div>
+
+                <div class="event-time">
+                    ${timestamp}
+                </div>
+
+            </div>
+
+
+            <div class="event-path">
+
+                ${request.method ?? "GET"}
+                &nbsp;
+                ${request.path ?? "/"}
+
+            </div>
+
+
+            <div class="event-bottom">
+
+                <div
+                    class="event-action action-${action}"
+                >
+                    ${action}
+                </div>
+
+                <div class="event-score">
+                    ${risk}
+                </div>
+
+            </div>
+        `;
+
+
+        container.appendChild(
+            element
+        );
+
+    });
+
+}
