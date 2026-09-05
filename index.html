@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sentinel API Security</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="app">
+
+```
+<!-- SIDEBAR -->
+<aside class="sidebar">
+
+    <div class="logo">
+        <div class="logo-icon">S</div>
+        <div>
+            <strong>Sentinel</strong>
+            <span>API Security</span>
+        </div>
+    </div>
+
+    <nav>
+        <button class="nav-item active" data-page="dashboard">
+            <span>◈</span> Dashboard
+        </button>
+
+        <button class="nav-item" data-page="threats">
+            <span>⚠</span> Threats
+            <b class="nav-badge">7</b>
+        </button>
+
+        <button class="nav-item" data-page="endpoints">
+            <span>⌘</span> API Endpoints
+        </button>
+
+        <button class="nav-item" data-page="activity">
+            <span>◷</span> Activity
+        </button>
+
+        <button class="nav-item" data-page="controls">
+            <span>◉</span> Controls
+        </button>
+    </nav>
+
+    <div class="sidebar-bottom">
+        <div class="system-status">
+            <span class="status-dot"></span>
+            Protection Active
+        </div>
+
+        <div class="version">
+            Sentinel v1.0.0
+        </div>
+    </div>
+
+</aside>
+
+
+<!-- MAIN -->
+<main class="main">
+
+    <!-- TOPBAR -->
+    <header class="topbar">
+
+        <div>
+            <div class="breadcrumb">SECURITY / <span>OVERVIEW</span></div>
+            <h1 id="pageTitle">Security Overview</h1>
+        </div>
+
+        <div class="top-actions">
+
+            <div class="live-indicator">
+                <span></span>
+                LIVE
+            </div>
+
+            <button class="icon-button" id="notificationButton">
+                🔔
+                <i></i>
+            </button>
+
+            <div class="user">
+                <div class="avatar">AK</div>
+                <div>
+                    <strong>Security Admin</strong>
+                    <small>Administrator</small>
+                </div>
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- DASHBOARD PAGE -->
+    <section class="page active-page" id="dashboardPage">
+
+        <!-- STATS -->
+        <div class="stats-grid">
+
+            <div class="stat-card">
+                <div class="stat-top">
+                    <span>Total Requests</span>
+                    <div class="stat-icon blue">↗</div>
+                </div>
+
+                <div class="stat-number" id="requestCount">2,847,391</div>
+
+                <div class="stat-change positive">
+                    ↑ 12.4% <span>vs last 24h</span>
+                </div>
+            </div>
+
+
+            <div class="stat-card">
+                <div class="stat-top">
+                    <span>Threats Detected</span>
+                    <div class="stat-icon red">⚠</div>
+                </div>
+
+                <div class="stat-number red-text" id="threatCount">247</div>
+
+                <div class="stat-change negative">
+                    ↑ 8.2% <span>vs last 24h</span>
+                </div>
+            </div>
+
+
+            <div class="stat-card">
+                <div class="stat-top">
+                    <span>Requests Blocked</span>
+                    <div class="stat-icon orange">⊘</div>
+                </div>
+
+                <div class="stat-number" id="blockedCount">183</div>
+
+                <div class="stat-change positive">
+                    ↑ 5.7% <span>protection rate</span>
+                </div>
+            </div>
+
+
+            <div class="stat-card">
+                <div class="stat-top">
+                    <span>Security Score</span>
+                    <div class="stat-icon green">✓</div>
+                </div>
+
+                <div class="stat-number green-text">92<span>/100</span></div>
+
+                <div class="stat-change positive">
+                    ↑ 3.1% <span>improved</span>
+                </div>
+            </div>
+
+        </div>
+
+
+        <!-- CHART + RISK -->
+        <div class="dashboard-grid">
+
+            <div class="panel chart-panel">
+
+                <div class="panel-header">
+                    <div>
+                        <h2>API Traffic & Threats</h2>
+                        <p>Requests monitored over the last 24 hours</p>
+                    </div>
+
+                    <select id="chartRange">
+                        <option>Last 24 hours</option>
+                        <option>Last 7 days</option>
+                        <option>Last 30 days</option>
+                    </select>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="trafficChart"></canvas>
+                </div>
+
+                <div class="chart-legend">
+                    <span>
+                        <i class="legend-blue"></i>
+                        API Requests
+                    </span>
+
+                    <span>
+                        <i class="legend-red"></i>
+                        Threats
+                    </span>
+                </div>
+
+            </div>
+
+
+            <div class="panel risk-panel">
+
+                <div class="panel-header">
+                    <div>
+                        <h2>Threat Distribution</h2>
+                        <p>Detected attack categories</p>
+                    </div>
+                </div>
+
+                <div class="donut-wrapper">
+
+                    <div class="donut">
+                        <div class="donut-center">
+                            <strong>247</strong>
+                            <span>Threats</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="threat-legend">
+
+                    <div>
+                        <span class="legend-dot critical"></span>
+                        <span>Broken Authentication</span>
+                        <strong>64</strong>
+                    </div>
+
+                    <div>
+                        <span class="legend-dot high"></span>
+                        <span>Injection</span>
+                        <strong>52</strong>
+                    </div>
+
+                    <div>
+                        <span class="legend-dot medium"></span>
+                        <span>Rate Abuse</span>
+                        <strong>81</strong>
+                    </div>
+
+                    <div>
+                        <span class="legend-dot low"></span>
+                        <span>Data Exposure</span>
+                        <strong>50</strong>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- LOWER GRID -->
+        <div class="lower-grid">
+
+            <!-- THREAT FEED -->
+            <div class="panel">
+
+                <div class="panel-header">
+                    <div>
+                        <h2>Live Threat Feed</h2>
+                        <p>Most recent security events</p>
+                    </div>
+
+                    <button class="text-button" id="viewThreats">
+                        View all →
+                    </button>
+                </div>
+
+                <div class="table-wrapper">
+
+                    <table>
+
+                        <thead>
+                            <tr>
+                                <th>Endpoint</th>
+                                <th>Threat</th>
+                                <th>Source</th>
+                                <th>Severity</th>
+                                <th>Action</th>
+                                <th>Time</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="threatTable">
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+
+
+            <!-- ENDPOINT RISK -->
+            <div class="panel endpoint-panel">
+
+                <div class="panel-header">
+                    <div>
+                        <h2>Highest Risk Endpoints</h2>
+                        <p>Endpoints requiring attention</p>
+                    </div>
+                </div>
+
+                <div class="endpoint-list">
+
+                    <div class="endpoint">
+                        <div class="endpoint-icon red">!</div>
+
+                        <div class="endpoint-info">
+                            <strong>/api/admin/users</strong>
+                            <span>Critical exposure</span>
+                        </div>
+
+                        <div class="risk-score critical-score">94</div>
+                    </div>
+
+
+                    <div class="endpoint">
+                        <div class="endpoint-icon orange">!</div>
+
+                        <div class="endpoint-info">
+                            <strong>/api/auth/login</strong>
+                            <span>Brute force activity</span>
+                        </div>
+
+                        <div class="risk-score high-score">81</div>
+                    </div>
+
+
+                    <div class="endpoint">
+                        <div class="endpoint-icon yellow">!</div>
+
+                        <div class="endpoint-info">
+                            <strong>/api/orders</strong>
+                            <span>Excessive requests</span>
+                        </div>
+
+                        <div class="risk-score medium-score">67</div>
+                    </div>
+
+
+                    <div class="endpoint">
+                        <div class="endpoint-icon green">✓</div>
+
+                        <div class="endpoint-info">
+                            <strong>/api/products</strong>
+                            <span>Protected</span>
+                        </div>
+
+                        <div class="risk-score safe-score">18</div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- THREATS PAGE -->
+    <section class="page" id="threatsPage">
+
+        <div class="page-toolbar">
+
+            <div class="search-box">
+                🔍
+                <input type="text" id="threatSearch" placeholder="Search threats...">
+            </div>
+
+            <select id="severityFilter">
+                <option value="all">All severities</option>
+                <option value="critical">Critical</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+            </select>
+
+            <button class="primary-button" id="simulateAttack">
+                + Simulate Threat
+            </button>
+
+        </div>
+
+        <div class="panel">
+
+            <div class="panel-header">
+                <div>
+                    <h2>Threat Detection Center</h2>
+                    <p>Investigate and respond to API security events</p>
+                </div>
+            </div>
+
+            <div class="threat-cards" id="threatCards"></div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ENDPOINT PAGE -->
+    <section class="page" id="endpointsPage">
+
+        <div class="page-toolbar">
+
+            <div class="search-box">
+                🔍
+                <input type="text" id="endpointSearch" placeholder="Search endpoints...">
+            </div>
+
+            <button class="primary-button">
+                + Add API
+            </button>
+
+        </div>
+
+        <div class="panel">
+
+            <div class="panel-header">
+                <div>
+                    <h2>API Endpoint Inventory</h2>
+                    <p>Security posture across your API surface</p>
+                </div>
+            </div>
+
+            <div class="endpoint-grid" id="endpointGrid"></div>
+
+        </div>
+
+    </section>
+
+
+    <!-- ACTIVITY PAGE -->
+    <section class="page" id="activityPage">
+
+        <div class="panel">
+
+            <div class="panel-header">
+                <div>
+                    <h2>Security Activity</h2>
+                    <p>Complete audit trail of system actions</p>
+                </div>
+            </div>
+
+            <div class="activity-list" id="activityList"></div>
+
+        </div>
+
+    </section>
+
+
+    <!-- CONTROLS PAGE -->
+    <section class="page" id="controlsPage">
+
+        <div class="controls-grid">
+
+            <div class="panel">
+
+                <div class="panel-header">
+                    <div>
+                        <h2>Protection Controls</h2>
+                        <p>Configure automated security responses</p>
+                    </div>
+                </div>
+
+                <div class="control-row">
+                    <div>
+                        <strong>Automatic Threat Blocking</strong>
+                        <span>Block high-confidence attacks automatically</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" checked>
+                        <span></span>
+                    </label>
+                </div>
+
+                <div class="control-row">
+                    <div>
+                        <strong>Rate Limiting</strong>
+                        <span>Limit excessive requests from clients</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" checked>
+                        <span></span>
+                    </label>
+                </div>
+
+                <div class="control-row">
+                    <div>
+                        <strong>Injection Protection</strong>
+                        <span>Detect suspicious request parameters</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" checked>
+                        <span></span>
+                    </label>
+                </div>
+
+                <div class="control-row">
+                    <div>
+                        <strong>Account Abuse Detection</strong>
+                        <span>Monitor suspicious authentication patterns</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" checked>
+                        <span></span>
+                    </label>
+                </div>
+
+                <div class="control-row">
+                    <div>
+                        <strong>Data Exposure Detection</strong>
+                        <span>Identify APIs returning excessive data</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox">
+                        <span></span>
+                    </label>
+                </div>
+
+            </div>
+
+
+            <div class="panel">
+
+                <div class="panel-header">
+                    <div>
+                        <h2>Response Policy</h2>
+                        <p>What happens when a threat is detected?</p>
+                    </div>
+                </div>
+
+                <div class="policy">
+
+                    <div class="policy-item">
+                        <div class="policy-number">01</div>
+                        <div>
+                            <strong>Detect</strong>
+                            <span>Analyze request behavior</span>
+                        </div>
+                    </div>
+
+                    <div class="policy-arrow">↓</div>
+
+                    <div class="policy-item">
+                        <div class="policy-number">02</div>
+                        <div>
+                            <strong>Score</strong>
+                            <span>Calculate threat confidence</span>
+                        </div>
+                    </div>
+
+                    <div class="policy-arrow">↓</div>
+
+                    <div class="policy-item">
+                        <div class="policy-number">03</div>
+                        <div>
+                            <strong>Respond</strong>
+                            <span>Block, rate-limit or alert</span>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</main>
+```
+
+</div>
+
+<!-- THREAT DETAIL MODAL -->
+
+<div class="modal-overlay" id="modal">
+
+```
+<div class="modal">
+
+    <button class="modal-close" id="modalClose">×</button>
+
+    <div class="modal-header">
+
+        <div class="modal-threat-icon">⚠</div>
+
+        <div>
+            <span class="modal-label">THREAT DETECTED</span>
+            <h2 id="modalTitle">SQL Injection Attempt</h2>
+        </div>
+
+    </div>
+
+    <div class="modal-content">
+
+        <div class="detail-grid">
+
+            <div class="detail-item">
+                <span>Endpoint</span>
+                <strong id="modalEndpoint">/api/users</strong>
+            </div>
+
+            <div class="detail-item">
+                <span>Source IP</span>
+                <strong id="modalIP">185.22.91.42</strong>
+            </div>
+
+            <div class="detail-item">
+                <span>Severity</span>
+                <strong id="modalSeverity">CRITICAL</strong>
+            </div>
+
+            <div class="detail-item">
+                <span>Action</span>
+                <strong id="modalAction">BLOCKED</strong>
+            </div>
+
+        </div>
+
+
+        <div class="reason-box">
+
+            <h3>Why was this flagged?</h3>
+
+            <p id="modalReason">
+                Multiple suspicious SQL operators were detected in
+                request parameters. The request pattern matches a
+                known injection technique.
+            </p>
+
+        </div>
+
+
+        <div class="confidence">
+
+            <div class="confidence-header">
+                <span>Detection Confidence</span>
+                <strong id="modalConfidence">96%</strong>
+            </div>
+
+            <div class="confidence-bar">
+                <span id="confidenceFill"></span>
+            </div>
+
+        </div>
+
+
+        <div class="modal-actions">
+
+            <button class="secondary-button" id="falsePositive">
+                Mark False Positive
+            </button>
+
+            <button class="danger-button" id="blockIP">
+                Block Source IP
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+```
+
+</div>
+
+<script src="app.js"></script>
+
+</body>
+</html>
+
