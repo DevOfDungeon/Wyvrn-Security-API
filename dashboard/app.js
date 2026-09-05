@@ -826,3 +826,177 @@ function updateLiveStats() {
         formatNumber(threats);
 
 }
+
+
+// =========================================================
+// ATTACK SIMULATOR
+// =========================================================
+
+async function loadAttacks() {
+
+    const container =
+        $("#attackButtons");
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_BASE}/api/simulator/attacks`
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Could not load attacks"
+            );
+
+        }
+
+
+        const attacks =
+            await response.json();
+
+
+        const list =
+            Array.isArray(attacks)
+                ? attacks
+                : attacks.attacks ?? [];
+
+
+        container.innerHTML = "";
+
+
+        list.forEach(
+            attack => {
+
+                const button =
+                    document.createElement(
+                        "button"
+                    );
+
+
+                button.className =
+                    "attack-button";
+
+
+                button.textContent =
+                    attack.name ??
+                    attack.id;
+
+
+                button.onclick =
+                    () =>
+                        runAttack(
+                            attack.id
+                        );
+
+
+                container.appendChild(
+                    button
+                );
+
+            }
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Could not load attack simulator:",
+            error
+        );
+
+
+        container.innerHTML = `
+            <button
+                class="attack-button"
+                onclick="runAttack('sql_injection')"
+            >
+                SQL INJECTION
+            </button>
+
+            <button
+                class="attack-button"
+                onclick="runAttack('bola_idor')"
+            >
+                BOLA / IDOR
+            </button>
+
+            <button
+                class="attack-button"
+                onclick="runAttack('auth_abuse')"
+            >
+                AUTH ABUSE
+            </button>
+        `;
+
+    }
+
+}
+
+
+async function runAttack(
+    attackName
+) {
+
+    const buttons =
+        document.querySelectorAll(
+            ".attack-button"
+        );
+
+
+    buttons.forEach(
+        button =>
+            button.classList.add(
+                "running"
+            )
+    );
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_BASE}/api/simulator/run/${encodeURIComponent(
+                    attackName
+                )}`,
+                {
+                    method: "POST"
+                }
+            );
+
+
+        const result =
+            await response.json();
+
+
+        console.log(
+            "Attack result:",
+            result
+        );
+
+
+        await loadEvents();
+
+
+    } catch (error) {
+
+        console.error(
+            "Attack failed:",
+            error
+        );
+
+    } finally {
+
+        buttons.forEach(
+            button =>
+                button.classList.remove(
+                    "running"
+                )
+        );
+
+    }
+
+}
