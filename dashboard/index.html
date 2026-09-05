@@ -3,417 +3,256 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>WYVRN — Security Command</title>
-
+    <meta name="theme-color" content="#0b0c0c">
+    <title>WYVRN — Security Console</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-    <link
-        href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap"
-        rel="stylesheet"
-    >
-
-    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/dashboard/style.css">
 </head>
-
 <body>
-<div class="app-shell">
+    <div class="app-shell">
 
-    <!-- =========================================================
-         DECORATIVE ELEMENTS
-    ========================================================== -->
-
-    <div class="grain"></div>
-
-    <div class="confetti confetti-1"></div>
-    <div class="confetti confetti-2"></div>
-    <div class="confetti confetti-3"></div>
-    <div class="confetti confetti-4"></div>
-
-    <!-- =========================================================
-         NAVIGATION
-    ========================================================== -->
-
-    <header class="topbar">
-
-        <div class="brand">
-
-            <div class="brand-mark">
-                W
-            </div>
-
-            <div>
-                <div class="brand-name">WYVRN</div>
-                <div class="brand-subtitle">SECURITY COMMAND</div>
-            </div>
-
-        </div>
-
-        <div class="connection">
-
-            <span class="connection-dot"></span>
-
-            <span id="connectionText">
-                LIVE
-            </span>
-
-        </div>
-
-    </header>
-
-<!-- =========================================================
-         HERO
-    ========================================================== -->
-
-    <section class="hero">
-            <span>
-                PROTECTION ACTIVE
-            </span>
-
-        </div>
-
-    </section>
-
-    <!-- =========================================================
-         RISK CARD
-    ========================================================== -->
-
-    <section class="risk-card">
-
-        <div class="risk-card-top">
-
-            <div>
-                <div class="eyebrow">
-                    CURRENT THREAT LEVEL
-                </div>
-
-                <div
-                    class="risk-level"
-                    id="riskLevel"
-                >
-                    LOW
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-mark">W</div>
+                <div>
+                    <div class="brand-name">WYVRN</div>
+                    <div class="brand-sub">SECURITY API</div>
                 </div>
             </div>
 
-            <div class="risk-number">
-                <span id="riskScore">0</span>
-                <small>/100</small>
+            <div class="sidebar-label">CONSOLE</div>
+
+            <nav class="nav" id="mainNav">
+                <span class="nav-highlight" id="navHighlight"></span>
+                <a class="nav-item active" href="#overview">
+                    <span class="nav-key">01</span>
+                    <span>Overview</span>
+                </a>
+                <a class="nav-item" href="#events">
+                    <span class="nav-key">02</span>
+                    <span>Live Events</span>
+                </a>
+                <a class="nav-item" href="#detections">
+                    <span class="nav-key">03</span>
+                    <span>Detections</span>
+                </a>
+                <a class="nav-item" href="#simulator">
+                    <span class="nav-key">04</span>
+                    <span>Simulator</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-bottom">
+                <div class="system-line">
+                    <span class="live-dot"></span>
+                    <span id="sidebarStatus">CONNECTING</span>
+                </div>
+                <div class="sidebar-version">WYVRN MVP / LOCAL NODE</div>
             </div>
+        </aside>
 
-        </div>
+        <main class="main">
 
-        <div class="risk-bar">
-
-            <div
-                id="riskBar"
-                class="risk-bar-fill"
-            ></div>
-
-        </div>
-
-        <div class="risk-footer">
-
-            <span>
-                LIVE SECURITY SCORE
-            </span>
-
-            <span id="lastUpdated">
-                JUST NOW
-            </span>
-
-        </div>
-
-    </section>
-<!-- =========================================================
-         STATS
-    ========================================================== -->
-
-    <section class="stats-grid">
-
-        <article class="stat-card tilt-left">
-
-            <div class="stat-label">
-                REQUESTS
-            </div>
-
-            <div
-                class="stat-value"
-                id="totalRequests"
-            >
-                0
-            </div>
-
-            <div class="stat-foot">
-                INSPECTED
-            </div>
-
-        </article>
-
-
-        <article class="stat-card tilt-right">
-
-            <div class="stat-label">
-                BLOCKED
-            </div>
-
-            <div
-                class="stat-value"
-                id="blockedRequests"
-            >
-                0
-            </div>
-
-            <div class="stat-foot">
-                THREATS STOPPED
-            </div>
-
-        </article>
-
-
-        <article class="stat-card tilt-right">
-
-            <div class="stat-label">
-                RATE LIMITED
-            </div>
-
-            <div
-                class="stat-value"
-                id="rateLimited"
-            >
-                0
-            </div>
-
-            <div class="stat-foot">
-                ABUSE CONTROLLED
-            </div>
-
-        </article>
-
-
-        <article class="stat-card tilt-left">
-
-            <div class="stat-label">
-                THREATS
-            </div>
-
-            <div
-                class="stat-value"
-                id="threatCount"
-            >
-                0
-            </div>
-
-            <div class="stat-foot">
-                DETECTIONS
-            </div>
-
-        </article>
-
-    </section>
-
-<!-- =========================================================
-         ACTIVE CAMPAIGN
-    ========================================================== -->
-
-    <section
-        id="campaignSection"
-        class="campaign-card hidden"
-    >
-
-        <div class="campaign-stamp">
-            ACTIVE
-        </div>
-
-        <div class="campaign-header">
-
-            <div>
-
-                <div class="eyebrow">
-                    CORRELATED THREAT
+            <header class="topbar">
+                <div>
+                    <div class="eyebrow">API SECURITY CONTROL PLANE</div>
+                    <h1>Security posture</h1>
                 </div>
 
-                <h2>
-                    ATTACK<br>
-                    CAMPAIGN
-                </h2>
+                <div class="topbar-right">
+                    <div class="socket-status">
+                        <span class="live-dot"></span>
+                        <span id="connectionText">CONNECTING</span>
+                    </div>
+                    <div class="clock" id="lastUpdated">--:--:--</div>
+                </div>
+            </header>
 
-            </div>
+            <section id="overview" class="section overview-section">
 
-            <div
-                class="campaign-score"
-                id="campaignScore"
-            >
-                0
-            </div>
+                <div class="risk-layout">
 
-        </div>
+                    <article class="risk-panel panel">
+                        <div class="panel-kicker">
+                            <span>CURRENT RISK</span>
+                            <span id="riskLevel">LOW</span>
+                        </div>
 
-        <div
-            class="campaign-severity"
-            id="campaignSeverity"
-        >
-            HIGH
-        </div>
+                        <div class="risk-main">
+                            <div class="risk-number" id="riskScore">0</div>
+                            <div class="risk-copy">
+                                <div class="risk-caption">/ 100</div>
+                                <div class="risk-description">
+                                    Highest observed risk in the recent event window.
+                                </div>
+                            </div>
+                        </div>
 
-        <p id="campaignDescription">
-            Multiple hostile detections were observed
-            from the same source.
-        </p>
+                        <div class="risk-history-wrap">
+                            <canvas id="riskChart" class="risk-chart"></canvas>
+                            <div class="risk-track">
+                            <div id="riskBar" class="risk-fill"></div>
+                        </div>
+                        </div>
 
-        <div
-            class="campaign-detections"
-            id="campaignDetections"
-        ></div>
+                        <div class="risk-footer">
+                            <span>LOW 0</span>
+                            <span>MEDIUM 40</span>
+                            <span>HIGH 60</span>
+                            <span>CRITICAL 80</span>
+                        </div>
+                    </article>
 
-        <div class="campaign-line"></div>
+                    <div class="stat-grid">
+                        <article class="stat panel">
+                            <div class="stat-label">REQUESTS</div>
+                            <div class="stat-value" id="totalRequests">0</div>
+                            <div class="stat-note">INSPECTED</div>
+                        </article>
 
-        <div class="campaign-meta">
+                        <article class="stat panel">
+                            <div class="stat-label">THREATS</div>
+                            <div class="stat-value" id="threatCount">0</div>
+                            <div class="stat-note">DETECTIONS</div>
+                        </article>
 
-            <span>
-                SOURCE
-            </span>
+                        <article class="stat panel">
+                            <div class="stat-label">BLOCKED</div>
+                            <div class="stat-value" id="blockedRequests">0</div>
+                            <div class="stat-note">POLICY ACTION</div>
+                        </article>
 
-            <strong id="campaignIP">
-                —
-            </strong>
+                        <article class="stat panel">
+                            <div class="stat-label">RATE LIMITED</div>
+                            <div class="stat-value" id="rateLimited">0</div>
+                            <div class="stat-note">POLICY ACTION</div>
+                        </article>
+                    </div>
 
-        </div>
-
-        <div class="campaign-meta">
-
-            <span>
-                EVENTS
-            </span>
-
-            <strong id="campaignEvents">
-                0
-            </strong>
-
-        </div>
-
-    </section>
-
-<!-- =========================================================
-         THREAT STREAM
-    ========================================================== -->
-
-    <section class="section">
-
-        <div class="section-heading">
-
-            <div>
-                <div class="eyebrow">
-                    REAL-TIME TELEMETRY
                 </div>
 
-                <h2>
-                    THREAT STREAM
-                </h2>
-            </div>
+                <section id="campaignSection" class="campaign panel hidden">
+                    <div class="campaign-top">
+                        <div>
+                            <div class="panel-kicker">CORRELATED ACTIVITY</div>
+                            <h2>Attack campaign detected</h2>
+                        </div>
+                        <div class="campaign-score">
+                            <strong id="campaignScore">0</strong>
+                            <span id="campaignSeverity">HIGH</span>
+                        </div>
+                    </div>
 
-            <div class="live-symbol">
-                ●
-            </div>
+                    <p id="campaignDescription">Multiple threat signals were correlated.</p>
 
-        </div>
+                    <div class="campaign-meta">
+                        <div>
+                            <span>CLIENT</span>
+                            <strong id="campaignIP">UNKNOWN</strong>
+                        </div>
+                        <div>
+                            <span>EVENTS</span>
+                            <strong id="campaignEvents">0</strong>
+                        </div>
+                    </div>
 
-        <div
-            id="eventStream"
-            class="event-stream"
-        >
+                    <div id="campaignDetections" class="detection-pills"></div>
+                    <button class="campaign-investigate" id="investigateCampaign">INVESTIGATE CAMPAIGN →</button>
+                </section>
 
-            <div class="empty-state">
-                <span>WAITING FOR TRAFFIC</span>
-                <small>
-                    Security events will appear here.
-                </small>
-            </div>
+            </section>
 
-        </div>
+            <section id="events" class="section">
 
-    </section>
-<!-- =========================================================
-         DETECTIONS
-    ========================================================== -->
+                <div class="section-header">
+                    <div>
+                        <div class="eyebrow">STREAM</div>
+                        <h2>Live events</h2>
+                    </div>
 
-    <section class="section">
-
-        <div class="section-heading">
-
-            <div>
-                <div class="eyebrow">
-                    DETECTION ENGINE
+                    <div class="section-count">
+                        <span id="streamCount">0</span>
+                        EVENTS
+                    </div>
                 </div>
 
-                <h2>
-                    WHAT WYVRN SEES
-                </h2>
-            </div>
+                <div class="event-head">
+                    <span>TIME</span>
+                    <span>DETECTION</span>
+                    <span>REQUEST</span>
+                    <span>ACTION</span>
+                    <span>RISK</span>
+                </div>
 
-        </div>
+                <div id="eventStream" class="event-stream" aria-live="polite">
+                    <div class="empty">
+                        <div class="empty-symbol">—</div>
+                        <div>WAITING FOR SECURITY EVENTS</div>
+                        <small>Traffic inspected by WYVRN will appear here.</small>
+                    </div>
+                </div>
 
-        <div
-            id="detectionGrid"
-            class="detection-grid"
-        ></div>
+            </section>
 
-    </section>
+            <section id="detections" class="section">
 
-<!-- =========================================================
-         ATTACK SIMULATOR
-    ========================================================== -->
+                <div class="section-header">
+                    <div>
+                        <div class="eyebrow">ENGINE</div>
+                        <h2>Detection coverage</h2>
+                    </div>
+                    <div class="section-hint">CLICK A DETECTOR TO FILTER EVENTS</div>
+                </div>
 
-    <section class="simulator">
+                <div id="detectionGrid" class="detection-grid"></div>
 
-        <div class="simulator-copy">
+            </section>
 
-            <div class="eyebrow">
-                DEMONSTRATION MODE
-            </div>
+            <section id="simulator" class="section simulator-section">
 
-            <h2>
-                THROW<br>
-                SOMETHING<br>
-                AT WYVRN.
-            </h2>
+                <div class="section-header">
+                    <div>
+                        <div class="eyebrow">TEST HARNESS</div>
+                        <h2>Attack simulator</h2>
+                    </div>
+                    <div class="section-hint">GENERATE REAL TRAFFIC THROUGH THE PROXY</div>
+                </div>
 
-            <p>
-                Launch controlled attack scenarios
-                against the protected API.
-            </p>
+                <div class="simulator-layout">
+                    <div class="simulator-copy panel">
+                        <div class="simulator-symbol">◎</div>
+                        <div>
+                            <div class="simulator-title">Run a controlled attack</div>
+                            <p>
+                                Each scenario generates real requests against the protected
+                                proxy so you can watch detection, risk scoring and policy
+                                decisions happen live.
+                            </p>
+                        </div>
+                    </div>
 
-        </div>
+                    <div class="attack-panel panel">
+                        <div class="attack-label">SCENARIOS</div>
+                        <div id="attackButtons" class="attack-buttons"></div>
+                    </div>
+                </div>
 
-        <div
-            id="attackButtons"
-            class="attack-buttons"
-        ></div>
+                <div id="simulatorResult" class="simulator-result hidden"></div>
 
-    </section>
+            </section>
 
-<!-- =========================================================
-         FOOTER
-    ========================================================== -->
+            <footer class="footer">
+                <span>WYVRN SECURITY API</span>
+                <span>LOCAL DEVELOPMENT CONSOLE</span>
+            </footer>
 
-    <footer>
+        </main>
+    </div>
 
-        <div class="footer-brand">
-            WYVRN
-        </div>
+    <div id="toastContainer" class="toast-container"></div>
 
-        <div>
-            API SECURITY / THREAT CONTROL
-        </div>
-
-        <div>
-            v1.0
-        </div>
-
-    </footer>
-
-</div>
-
-
-
-
+    <script src="/dashboard/app.js"></script>
+</body>
+</html>

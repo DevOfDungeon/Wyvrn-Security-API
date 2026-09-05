@@ -2,6 +2,7 @@ import json
 import httpx
 from fastapi import FastAPI, Request, WebSocket
 from fastapi.responses import Response
+from fastapi.staticfiles import StaticFiles
 
 from wyvrn.middleware import WyvrnMiddleware
 from wyvrn.store import get_events, get_event_count
@@ -35,11 +36,22 @@ app = FastAPI(
     version="0.1.0",
 )
 
+app.mount(
+    "/dashboard",
+    StaticFiles(
+        directory="dashboard",
+        html=True
+    ),
+    name="dashboard"
+)
+
 app.add_middleware(
     WyvrnMiddleware
 )
 
 TARGET_API = "http://127.0.0.1:8000"
+
+
 
 
 # ============================================================
