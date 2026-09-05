@@ -1,7 +1,10 @@
-from fastapi import FastAPI, Header, HTTPException
-from typing import Optional
+from fastapi import FastAPI, HTTPException
 
-app = FastAPI(title="Wyvrn Vulnerable API")
+app = FastAPI(
+    title="WYVRN Target API",
+    description="Intentionally vulnerable API used to test WYVRN.",
+    version="0.1.0",
+)
 
 USERS = {
     1: {
@@ -30,81 +33,95 @@ USERS = {
     },
 }
 
+PRODUCTS = [
+    {
+        "id": i,
+        "name": f"Product {i}",
+        "price": i * 100,
+    }
+    for i in range(1, 101)
+]
+
+
 @app.get("/")
-def home():
+async def home():
     return {
-        "message": "Wyvrn vulnerable API",
-        "status": "running"
+        "service": "WYVRN Target API",
+        "status": "running",
+    }
+
+
+@app.get("/health")
+async def health():
+    return {
+        "status": "healthy",
     }
 
 
 @app.get("/users/{user_id}")
-def get_user(user_id: int):
-    """ 
-    Intentionally vulnerable to BOLA/IDOR.
-    There is currently NO authorization check.
-    """
+async def get_user(user_id: int):
+
+    # INTENTIONALLY VULNERABLE:
+    # No authorization check is performed.
 
     user = USERS.get(user_id)
 
     if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+        raise HTTPException(
+            status_code=404,
+            detail="User not found",
+        )
 
     return user
 
 
 @app.get("/products")
-def get_products(limit: int = 10):
-    """
-    Intentionally allows very large limits.
-    Useful later for data-exfiltration detection.
-    """
+async def get_products(limit: int = 10):
 
-    products = [
-        {"id": i, "name": f"Product {i}", "price": i * 100}
-        for i in range(1, 101)
-    ]
+    # INTENTIONALLY VULNERABLE:
+    # No sensible upper limit.
 
-    return products[:limit]
+    return PRODUCTS[:limit]
 
 
 @app.get("/search")
-def search(q: str):
-    """
-    Intentionally simplistic search endpoint.
-    We'll attack this later with injection-like payloads.
-    """
+async def search(q: str):
 
     return {
         "query": q,
         "results": [
             "Result 1",
             "Result 2",
-            "Result 3"
-        ]
+            "Result 3",
+        ],
     }
 
 
 @app.post("/login")
-def login(username: str, password: str):
-    """
-    Fake login endpoint.
-    No rate limiting yet.
-    """
+async def login(
+    username: str,
+    password: str,
+):
 
-    if username == "alice" and password == "password123":
+    if (
+        username == "alice"
+        and password == "password123"
+    ):
         return {
             "access_token": "fake-token-alice",
-            "user_id": 1
+            "user_id": 1,
         }
 
-    if username == "bob" and password == "password123":
+    if (
+        username == "bob"
+        and password == "password123"
+    ):
         return {
             "access_token": "fake-token-bob",
-            "user_id": 2
+            "user_id": 2,
         }
 
     raise HTTPException(
         status_code=401,
-        detail="Invalid credentials"
+        detail="Invalid credentials",
     )
