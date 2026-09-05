@@ -23,3 +23,25 @@ const DETECTIONS = [
 const $ = (selector) =>
     document.querySelector(selector);
 
+// =========================================================
+// INITIALISE
+// =========================================================
+
+document.addEventListener(
+    "DOMContentLoaded",
+    async () => {
+
+        renderDetectionCards();
+
+        await loadStats();
+
+        await loadEvents();
+
+        await loadThreats();
+
+        await loadAttacks();
+
+        connectWebSocket();
+
+    }
+);
