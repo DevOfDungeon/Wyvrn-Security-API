@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Header, HTTPException
 from typing import Optional
 
-app = FastAPI(title="Sentinel Vulnerable API")
+app = FastAPI(title="Wyvrn Vulnerable API")
 
 USERS = {
     1: {
@@ -33,7 +33,7 @@ USERS = {
 @app.get("/")
 def home():
     return {
-        "message": "Sentinel vulnerable API",
+        "message": "Wyvrn vulnerable API",
         "status": "running"
     }
 
