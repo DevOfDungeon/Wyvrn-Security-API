@@ -1232,3 +1232,19 @@ button {
     -webkit-tap-highlight-color: transparent;
 }
 
+
+@media (min-width: 431px) {
+    body {
+        background:
+            radial-gradient(
+                circle at center,
+                #18140e,
+                var(--black) 60%
+            );
+    }
+
+    .app-shell {
+        box-shadow:
+            0 0 80px rgba(0,0,0,0.7);
+    }
+}
