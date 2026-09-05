@@ -8,14 +8,13 @@ from wyvrn.detectors.engine import make_finding
 # ============================================================
 
 SQL_PATTERNS = [
-    re.compile(r"\bunion\s+select\b", re.IGNORECASE),
-    re.compile(r"\bor\s+1\s*=\s*1\b", re.IGNORECASE),
-    re.compile(r"\band\s+1\s*=\s*1\b", re.IGNORECASE),
-    re.compile(r"\bselect\s+.+\s+from\b", re.IGNORECASE),
-    re.compile(r"\bdrop\s+table\b", re.IGNORECASE),
-    re.compile(r"\binsert\s+into\b", re.IGNORECASE),
-    re.compile(r"\bdelete\s+from\b", re.IGNORECASE),
-    re.compile(r"--\s*$", re.IGNORECASE),
+    re.compile(r"\bunion\b\s+\bselect\b", re.IGNORECASE),
+    re.compile(r"\b(or|and)\b\s+['\"]?\d+['\"]?\s*=\s*['\"]?\d+", re.IGNORECASE),
+    re.compile(r"\bselect\b.+\bfrom\b", re.IGNORECASE),
+    re.compile(r"\bdrop\b\s+\btable\b", re.IGNORECASE),
+    re.compile(r"\binsert\b\s+\binto\b", re.IGNORECASE),
+    re.compile(r"\bdelete\b\s+\bfrom\b", re.IGNORECASE),
+    re.compile(r"--", re.IGNORECASE),
 ]
 
 
@@ -24,10 +23,10 @@ SQL_PATTERNS = [
 # ============================================================
 
 COMMAND_PATTERNS = [
-    re.compile(r";\s*(?:cat|ls|pwd|whoami|id|uname)\b", re.IGNORECASE),
-    re.compile(r"\|\s*(?:cat|ls|pwd|whoami|id|uname)\b", re.IGNORECASE),
-    re.compile(r"\$\(\s*(?:cat|ls|pwd|whoami|id|uname)\b", re.IGNORECASE),
-    re.compile(r"`\s*(?:cat|ls|pwd|whoami|id|uname)\b", re.IGNORECASE),
+    re.compile(r";\s*(cat|ls|pwd|whoami|id|uname)\b", re.IGNORECASE),
+    re.compile(r"\|\s*(cat|ls|pwd|whoami|id|uname)\b", re.IGNORECASE),
+    re.compile(r"\$\(\s*(cat|ls|pwd|whoami|id|uname)\b", re.IGNORECASE),
+    re.compile(r"`\s*(cat|ls|pwd|whoami|id|uname)\b", re.IGNORECASE),
 ]
 
 
@@ -47,8 +46,9 @@ XSS_PATTERNS = [
 # VALUE EXTRACTION
 # ============================================================
 
-def extract_values(request_event): 
+def extract_values(request_event):
     values = []
+
     query_params = request_event.get(
         "query_params",
         {},
@@ -105,7 +105,6 @@ def detect_injection(request_event):
         for pattern in SQL_PATTERNS:
 
             if pattern.search(value):
-
                 findings.append(
                     make_finding(
                         detection="SQL_INJECTION",
@@ -131,7 +130,6 @@ def detect_injection(request_event):
         for pattern in COMMAND_PATTERNS:
 
             if pattern.search(value):
-
                 findings.append(
                     make_finding(
                         detection="COMMAND_INJECTION",
@@ -157,7 +155,6 @@ def detect_injection(request_event):
         for pattern in XSS_PATTERNS:
 
             if pattern.search(value):
-
                 findings.append(
                     make_finding(
                         detection="XSS_PAYLOAD",
@@ -175,3 +172,5 @@ def detect_injection(request_event):
                 )
 
                 break
+
+    return findings
