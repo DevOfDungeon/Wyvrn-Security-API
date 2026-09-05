@@ -20,9 +20,7 @@ from wyvrn.detectors.excessive_data import (
 from wyvrn.detectors.anomaly import (
     detect_behavioral_anomaly,
 )
-from wyvrn.detectors.rate_limit import (
-    detect_rate_abuse,
-)
+
 
 from wyvrn.risk import calculate_risk
 from wyvrn.policy import evaluate_policy
@@ -189,14 +187,11 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
         # Rate abuse detection.
         #
         # This maintains a rolling request history per client IP.
-        rate_findings = detect_rate_abuse(
-            request_event
-        )
+        
 
         request_findings = (
             request_findings
             + auth_request_findings
-            + rate_findings
         )
 
         request_risk = calculate_risk(
