@@ -1,11 +1,18 @@
-const role =
-localStorage.getItem("wyvrnRole") || "user";
+// AUTH CHECK
 
-document.getElementById(
-    "userRole"
-).textContent =
-role.toUpperCase();
-document.getElementById("userRole").textContent = "ADMIN";
+const role =
+    localStorage.getItem("wyvrnRole");
+
+if (!role) {
+    window.location.href = "login.html";
+}
+
+// SHOW ROLE
+
+document.getElementById("userRole").textContent =
+    role.toUpperCase();
+
+// DASHBOARD METRICS
 
 document.getElementById("totalApis").textContent = "128";
 document.getElementById("alerts").textContent = "17";
@@ -14,6 +21,8 @@ document.getElementById("blockedRequests").textContent = "342";
 
 document.getElementById("riskScore").textContent = "78";
 document.getElementById("riskLabel").textContent = "HIGH RISK";
+
+// THREAT FEED
 
 document.getElementById("threatList").innerHTML = `
 <div class="threat-item">
@@ -29,6 +38,8 @@ document.getElementById("threatList").innerHTML = `
 </div>
 `;
 
+// HIGH RISK ENDPOINTS
+
 document.getElementById("endpointList").innerHTML = `
 <div class="endpoint-item">
 GET /api/users
@@ -43,17 +54,27 @@ GET /api/orders
 </div>
 `;
 
+// LIVE THREAT COUNTER
+
 setInterval(() => {
 
     const threats =
         Math.floor(Math.random() * 10) + 1;
 
-    document.getElementById("activeThreats").textContent =
-        threats;
+    document.getElementById(
+        "activeThreats"
+    ).textContent = threats;
 
 }, 3000);
 
-function showThreatNotification(message){
+// TOAST NOTIFICATIONS
+
+function showThreatNotification(message) {
+
+    const container =
+        document.getElementById("toastContainer");
+
+    if (!container) return;
 
     const toast =
         document.createElement("div");
@@ -62,14 +83,14 @@ function showThreatNotification(message){
 
     toast.textContent = message;
 
-    document
-        .getElementById("toastContainer")
-        .appendChild(toast);
+    container.appendChild(toast);
 
     setTimeout(() => {
         toast.remove();
     }, 4000);
 }
+
+// RANDOM ALERTS
 
 setInterval(() => {
 
@@ -86,8 +107,23 @@ setInterval(() => {
     ];
 
     const randomAlert =
-        alerts[Math.floor(Math.random()*alerts.length)];
+        alerts[Math.floor(
+            Math.random() * alerts.length
+        )];
 
     showThreatNotification(randomAlert);
 
 }, 10000);
+
+// LOGOUT
+
+function logout() {
+
+    localStorage.removeItem(
+        "wyvrnRole"
+    );
+
+    window.location.href =
+        "login.html";
+
+}

@@ -1,24 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
+<link rel="stylesheet" href="style.css">
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>WYVRN Policy Actions</title>
 
 <style>
-
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Inter,sans-serif;
-}
-
-body{
-background:#0b1020;
-color:white;
-padding:30px;
-}
 
 .card{
 background:#111827;
@@ -60,10 +52,48 @@ border-radius:10px;
 display:none;
 }
 
+button:hover{
+opacity:0.9;
+}
+
 </style>
+
 </head>
 
 <body>
+
+<div class="layout">
+
+<aside class="sidebar">
+
+    <div class="logo">
+        <h1>WYVRN</h1>
+        <span>API Security Control Plane</span>
+    </div>
+
+    <nav>
+
+        <a href="dashboard.html">Dashboard</a>
+
+        <a href="endpoints.html">Endpoints</a>
+
+        <a href="threat-monitor.html">Threat Monitor</a>
+
+        <a href="alerts.html">Alerts</a>
+
+        <a href="policies.html" class="active">Policies</a>
+
+        <a href="analytics.html">Analytics</a>
+
+        <a href="settings.html">Settings</a>
+
+        <a href="#" onclick="logout()">Logout</a>
+
+    </nav>
+
+</aside>
+
+<main class="main-content">
 
 <h1>Policy Response Center</h1>
 
@@ -89,6 +119,30 @@ Require MFA
 
 </div>
 
+<div class="card">
+
+<h3>POST /api/login</h3>
+
+<p>Brute Force Activity Detected</p>
+
+<button class="block" onclick="takeAction('Login Endpoint Temporarily Blocked')">
+Block Endpoint
+</button>
+
+<button class="limit" onclick="takeAction('Rate Limiting Applied')">
+Enable Rate Limit
+</button>
+
+<button class="mfa" onclick="takeAction('Step-up Authentication Enabled')">
+Require MFA
+</button>
+
+</div>
+
+</main>
+
+</div>
+
 <script>
 
 function takeAction(action){
@@ -104,6 +158,11 @@ result.innerHTML =
 }
 
 </script>
-
+<script>
+function logout() {
+    localStorage.removeItem("wyvrnRole");
+    window.location.href = "login.html";
+}
+</script>
 </body>
 </html>

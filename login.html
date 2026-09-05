@@ -61,6 +61,11 @@
 </div>
 
 <script src="login.js"></script>
-
+<script>
+function logout() {
+    localStorage.removeItem("wyvrnRole");
+    window.location.href = "login.html";
+}
+</script>
 </body>
 </html>

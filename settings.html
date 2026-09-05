@@ -1,24 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
+<link rel="stylesheet" href="style.css">
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>WYVRN Settings</title>
 
 <style>
-
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Inter,sans-serif;
-}
-
-body{
-background:#0b1020;
-color:white;
-padding:30px;
-}
 
 .card{
 background:#111827;
@@ -39,6 +31,7 @@ margin-bottom:25px;
 label{
 display:block;
 margin-bottom:10px;
+font-weight:600;
 }
 
 select,input{
@@ -60,10 +53,56 @@ color:white;
 cursor:pointer;
 }
 
+button:hover{
+opacity:0.9;
+}
+
+.success{
+margin-top:20px;
+padding:12px;
+background:#14532d;
+border-radius:8px;
+display:none;
+}
+
 </style>
+
 </head>
 
 <body>
+
+<div class="layout">
+
+<aside class="sidebar">
+
+    <div class="logo">
+        <h1>WYVRN</h1>
+        <span>API Security Control Plane</span>
+    </div>
+
+    <nav>
+
+        <a href="dashboard.html">Dashboard</a>
+
+        <a href="endpoints.html">Endpoints</a>
+
+        <a href="threat-monitor.html">Threat Monitor</a>
+
+        <a href="alerts.html">Alerts</a>
+
+        <a href="policies.html">Policies</a>
+
+        <a href="analytics.html">Analytics</a>
+
+        <a href="settings.html" class="active">Settings</a>
+
+        <a href="#" onclick="logout()">Logout</a>
+
+    </nav>
+
+</aside>
+
+<main class="main-content">
 
 <h1>Settings</h1>
 
@@ -73,7 +112,7 @@ cursor:pointer;
 
 <label>Alert Sensitivity</label>
 
-<select>
+<select id="sensitivity">
 <option>Low</option>
 <option selected>Medium</option>
 <option>High</option>
@@ -85,7 +124,7 @@ cursor:pointer;
 
 <label>Auto Block Threats</label>
 
-<select>
+<select id="autoblock">
 <option>Disabled</option>
 <option selected>Enabled</option>
 </select>
@@ -98,16 +137,50 @@ cursor:pointer;
 
 <input
 type="email"
+id="email"
 value="security@wyvrn.ai"
 >
 
 </div>
 
-<button>
+<button onclick="saveSettings()">
 Save Changes
 </button>
 
+<div id="successMessage" class="success">
+✅ Settings saved successfully
 </div>
 
+</div>
+
+</main>
+
+</div>
+
+<script>
+
+function saveSettings(){
+
+document.getElementById(
+    "successMessage"
+).style.display = "block";
+
+setTimeout(() => {
+
+document.getElementById(
+    "successMessage"
+).style.display = "none";
+
+}, 3000);
+
+}
+
+</script>
+<script>
+function logout() {
+    localStorage.removeItem("wyvrnRole");
+    window.location.href = "login.html";
+}
+</script>
 </body>
 </html>

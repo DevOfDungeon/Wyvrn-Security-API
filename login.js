@@ -1,12 +1,11 @@
-const form =
-document.getElementById("loginForm");
+const form = document.getElementById("loginForm");
 
-form.addEventListener("submit",(e)=>{
+form.addEventListener("submit", (e) => {
 
     e.preventDefault();
 
     const role =
-    document.getElementById("role").value;
+        document.getElementById("role").value;
 
     localStorage.setItem(
         "wyvrnRole",
@@ -14,6 +13,6 @@ form.addEventListener("submit",(e)=>{
     );
 
     window.location.href =
-    "dashboard.html";
+        "dashboard.html";
 
 });

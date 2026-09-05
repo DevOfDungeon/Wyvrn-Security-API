@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+<link rel="stylesheet" href="style.css">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -28,7 +29,7 @@ margin-bottom:20px;
 
 .container{
 display:grid;
-grid-template-columns:300px 1fr;
+grid-template-columns:350px 1fr;
 gap:20px;
 }
 
@@ -68,6 +69,30 @@ background:#dc2626;
 
 <body>
 
+<div class="layout">
+
+<aside class="sidebar">
+
+    <div class="logo">
+        <h1>WYVRN</h1>
+        <span>API Security Control Plane</span>
+    </div>
+
+    <nav>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="endpoints.html" class="active">Endpoints</a>
+        <a href="threat-monitor.html">Threat Monitor</a>
+        <a href="alerts.html">Alerts</a>
+        <a href="policies.html">Policies</a>
+        <a href="analytics.html">Analytics</a>
+        <a href="settings.html">Settings</a>
+        <a href="#" onclick="logout()">Logout</a>
+    </nav>
+
+</aside>
+
+<main class="main-content">
+
 <h1>Endpoint Explorer</h1>
 
 <div class="container">
@@ -99,14 +124,6 @@ POST /api/login
 
 <div class="endpoint" onclick="showEndpoint(3)">
 GET /api/orders
-</div>
-
-<div class="endpoint" onclick="showEndpoint(4)">
-POST /api/payment
-</div>
-
-<div class="endpoint" onclick="showEndpoint(5)">
-GET /api/admin
 </div>
 
 <div class="endpoint" onclick="showEndpoint(4)">
@@ -254,9 +271,7 @@ document.getElementById("reason")
 
 }
 
-</script>
 function filterEndpoints(){
-
     const input =
         document.getElementById("searchBox")
         .value
@@ -281,6 +296,15 @@ function filterEndpoints(){
     });
 
 }
+</script>
+</main>
 
+</div>
+<script>
+function logout() {
+    localStorage.removeItem("wyvrnRole");
+    window.location.href = "login.html";
+}
+</script>
 </body>
 </html>

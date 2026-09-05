@@ -1,8 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
+<link rel="stylesheet" href="style.css">
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>WYVRN Alerts</title>
 
 <style>
@@ -56,11 +61,48 @@ background:#2563eb;
 color:white;
 }
 
+button:hover{
+opacity:0.9;
+}
+
 </style>
 
 </head>
 
 <body>
+
+<div class="layout">
+
+<aside class="sidebar">
+
+    <div class="logo">
+        <h1>WYVRN</h1>
+        <span>API Security Control Plane</span>
+    </div>
+
+    <nav>
+
+        <a href="dashboard.html">Dashboard</a>
+
+        <a href="endpoints.html">Endpoints</a>
+
+        <a href="threat-monitor.html">Threat Monitor</a>
+
+        <a href="alerts.html" class="active">Alerts</a>
+
+        <a href="policies.html">Policies</a>
+
+        <a href="analytics.html">Analytics</a>
+
+        <a href="settings.html">Settings</a>
+
+        <a href="#" onclick="logout()">Logout</a>
+
+    </nav>
+
+</aside>
+
+<main class="main-content">
 
 <h1>Security Alerts</h1>
 
@@ -131,5 +173,14 @@ Review Alert
 
 </div>
 
+</main>
+
+</div>
+<script>
+function logout() {
+    localStorage.removeItem("wyvrnRole");
+    window.location.href = "login.html";
+}
+</script>
 </body>
 </html>

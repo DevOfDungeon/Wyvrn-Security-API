@@ -1,28 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
+<link rel="stylesheet" href="style.css">
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>WYVRN Analytics</title>
 
 <style>
-
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Inter,sans-serif;
-}
-
-body{
-background:#0b1020;
-color:white;
-padding:30px;
-}
-
-h1{
-margin-bottom:25px;
-}
 
 .grid{
 display:grid;
@@ -65,9 +53,43 @@ border-radius:8px 8px 0 0;
 .bar5{height:200px;}
 
 </style>
+
 </head>
 
 <body>
+
+<div class="layout">
+
+<aside class="sidebar">
+
+    <div class="logo">
+        <h1>WYVRN</h1>
+        <span>API Security Control Plane</span>
+    </div>
+
+    <nav>
+
+        <a href="dashboard.html">Dashboard</a>
+
+        <a href="endpoints.html">Endpoints</a>
+
+        <a href="threat-monitor.html">Threat Monitor</a>
+
+        <a href="alerts.html">Alerts</a>
+
+        <a href="policies.html">Policies</a>
+
+        <a href="analytics.html" class="active">Analytics</a>
+
+        <a href="settings.html">Settings</a>
+
+        <a href="#" onclick="logout()">Logout</a>
+
+    </nav>
+
+</aside>
+
+<main class="main-content">
 
 <h1>Analytics Dashboard</h1>
 
@@ -75,15 +97,16 @@ border-radius:8px 8px 0 0;
 
 <div class="card">
 <h3>Total Requests Today</h3>
-<div class="metric">48K</div>
+<div class="metric" id="requests">48K</div>
 </div>
 
 <div class="card">
 <h3>Blocked Threats</h3>
-<div class="metric">327</div>
+<div class="metric" id="blocked">327</div>
 </div>
 
 <div class="card">
+
 <h3>Attack Trend</h3>
 
 <div class="chart">
@@ -97,7 +120,8 @@ border-radius:8px 8px 0 0;
 </div>
 
 <div class="card">
-<h3>Top Attack Type</h3>
+
+<h3>Top Attack Types</h3>
 
 <br>
 
@@ -108,6 +132,36 @@ border-radius:8px 8px 0 0;
 </div>
 
 </div>
+
+</main>
+
+</div>
+
+<script>
+
+setInterval(() => {
+
+    const requests =
+        Math.floor(Math.random()*100) + 40;
+
+    const blocked =
+        Math.floor(Math.random()*500) + 100;
+
+    document.getElementById("requests")
+        .textContent = requests + "K";
+
+    document.getElementById("blocked")
+        .textContent = blocked;
+
+}, 4000);
+
+</script>
+<script>
+function logout() {
+    localStorage.removeItem("wyvrnRole");
+    window.location.href = "login.html";
+}
+</script>
 
 </body>
 </html>

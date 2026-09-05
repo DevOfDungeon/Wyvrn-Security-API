@@ -38,7 +38,7 @@
 
 <a href="settings.html">Settings</a>
 
-<a href="login.html">Logout</a>
+<a href="#" onclick="logout()">Logout</a>
 
 </nav>
 
@@ -137,6 +137,11 @@
 
 <div id="toastContainer"></div>
 <script src="dashboard.js"></script>
-
+<script>
+function logout() {
+    localStorage.removeItem("wyvrnRole");
+    window.location.href = "login.html";
+}
+</script>
 </body>
 </html>

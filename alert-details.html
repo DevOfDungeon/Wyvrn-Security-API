@@ -1,26 +1,32 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-<title>Alert Details</title>
+
+<link rel="stylesheet" href="style.css">
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>WYVRN Alert Details</title>
+
 <style>
-body{
-background:#0b1020;
-color:white;
-font-family:Inter,sans-serif;
-padding:30px;
-}
+
 .card{
 background:#111827;
 padding:25px;
 border-radius:15px;
 max-width:800px;
 }
+
 .badge{
 background:#dc2626;
 padding:6px 12px;
 border-radius:20px;
 display:inline-block;
+margin-bottom:15px;
 }
+
 button{
 margin-top:20px;
 padding:10px 15px;
@@ -29,11 +35,51 @@ color:white;
 border:none;
 border-radius:8px;
 cursor:pointer;
+margin-right:10px;
 }
+
+button:hover{
+opacity:0.9;
+}
+
 </style>
+
 </head>
 
 <body>
+
+<div class="layout">
+
+<aside class="sidebar">
+
+    <div class="logo">
+        <h1>WYVRN</h1>
+        <span>API Security Control Plane</span>
+    </div>
+
+    <nav>
+
+        <a href="dashboard.html">Dashboard</a>
+
+        <a href="endpoints.html">Endpoints</a>
+
+        <a href="threat-monitor.html">Threat Monitor</a>
+
+        <a href="alerts.html" class="active">Alerts</a>
+
+        <a href="policies.html">Policies</a>
+
+        <a href="analytics.html">Analytics</a>
+
+        <a href="settings.html">Settings</a>
+
+        <a href="#" onclick="logout()">Logout</a>
+
+    </nav>
+
+</aside>
+
+<main class="main-content">
 
 <div class="card">
 
@@ -41,23 +87,57 @@ cursor:pointer;
 
 <h1>BOLA Attack Detected</h1>
 
-<p>
-Endpoint: GET /api/users/:id
-</p>
+<br>
 
 <p>
-Risk Score: 87
+<strong>Endpoint:</strong>
+GET /api/users/:id
 </p>
 
+<br>
+
 <p>
-Reason:
+<strong>Risk Score:</strong>
+87
+</p>
+
+<br>
+
+<p>
+<strong>Reason:</strong><br>
 Unauthorized access to other user records detected.
 </p>
 
-<button>Block Endpoint</button>
-<button>Monitor Only</button>
+<button onclick="showAction('Endpoint Blocked')">
+Block Endpoint
+</button>
+
+<button onclick="showAction('Monitoring Enabled')">
+Monitor Only
+</button>
+
+<div id="actionResult" style="margin-top:20px;"></div>
 
 </div>
+
+</main>
+
+</div>
+
+<script>
+
+function showAction(action){
+
+document.getElementById("actionResult").innerHTML =
+"✅ Action Executed: " + action;
+
+}
+
+function logout() {
+    localStorage.removeItem("wyvrnRole");
+    window.location.href = "login.html";
+}
+</script>
 
 </body>
 </html>

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link rel="stylesheet" href="style.css">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WYVRN Threat Monitor</title>
@@ -68,6 +69,30 @@ margin-top:10px;
 
 <body>
 
+<div class="layout">
+
+<aside class="sidebar">
+
+    <div class="logo">
+        <h1>WYVRN</h1>
+        <span>API Security Control Plane</span>
+    </div>
+
+    <nav>
+        <a href="dashboard.html">Dashboard</a>
+        <a href="endpoints.html">Endpoints</a>
+        <a href="threat-monitor.html" class="active">Threat Monitor</a>
+        <a href="alerts.html">Alerts</a>
+        <a href="policies.html">Policies</a>
+        <a href="analytics.html">Analytics</a>
+        <a href="settings.html">Settings</a>
+        <a href="#" onclick="logout()">Logout</a>
+    </nav>
+
+</aside>
+
+<main class="main-content">
+
 <h1>Threat Monitor</h1>
 
 <div class="grid">
@@ -110,7 +135,7 @@ Attack: Sensitive Metadata Leakage
 
 <h3>Active Threats</h3>
 
-<div class="metric">
+<div class="metric" id="activeThreatCount">
 4
 </div>
 
@@ -144,5 +169,29 @@ SAFE
 
 </div>
 
+</main>
+
+</div>
+
+<script>
+
+setInterval(() => {
+
+    const value =
+        Math.floor(Math.random() * 10) + 1;
+
+    document.getElementById(
+        "activeThreatCount"
+    ).textContent = value;
+
+}, 3000);
+
+</script>
+<script>
+function logout() {
+    localStorage.removeItem("wyvrnRole");
+    window.location.href = "login.html";
+}
+</script>
 </body>
 </html>
