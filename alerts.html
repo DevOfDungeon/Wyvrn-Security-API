@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WYVRN Alerts</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Inter,sans-serif;
+}
+
+body{
+background:#0b1020;
+color:white;
+padding:30px;
+}
+
+h1{
+margin-bottom:25px;
+}
+
+.alert{
+background:#111827;
+padding:20px;
+border-radius:15px;
+margin-bottom:15px;
+border-left:5px solid red;
+}
+
+.time{
+color:#94a3b8;
+font-size:14px;
+margin-top:8px;
+}
+
+.severity{
+display:inline-block;
+padding:5px 10px;
+border-radius:20px;
+background:#dc2626;
+margin-bottom:10px;
+}
+
+button{
+margin-top:10px;
+padding:10px 15px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+background:#2563eb;
+color:white;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>Security Alerts</h1>
+
+<div class="alert">
+
+<div class="severity">
+CRITICAL
+</div>
+
+<h3>BOLA Attack Detected</h3>
+
+<p>
+Unauthorized object access attempt detected on
+GET /api/users/:id
+</p>
+
+<div class="time">
+5 minutes ago
+</div>
+
+<button>
+Review Alert
+</button>
+
+</div>
+
+<div class="alert">
+
+<div class="severity">
+HIGH
+</div>
+
+<h3>Login Abuse</h3>
+
+<p>
+Multiple failed login attempts from same source.
+</p>
+
+<div class="time">
+15 minutes ago
+</div>
+
+<button>
+Review Alert
+</button>
+
+</div>
+
+<div class="alert">
+
+<div class="severity">
+MEDIUM
+</div>
+
+<h3>Excessive Data Exposure</h3>
+
+<p>
+Sensitive fields detected in API response.
+</p>
+
+<div class="time">
+42 minutes ago
+</div>
+
+<button>
+Review Alert
+</button>
+
+</div>
+
+</body>
+</html>
