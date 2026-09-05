@@ -1,22 +1,21 @@
+import json
 import time
 import uuid
 
 from datetime import datetime, timezone
 
+from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
 from wyvrn.detectors.engine import run_detectors
-from wyvrn.detectors.sensitive_data import (
-    detect_sensitive_data,
-)
-from wyvrn.detectors.excessive_data import (
-    detect_excessive_data,
-)
-from wyvrn.detectors.anomaly import (
-    detect_behavioral_anomaly,
-)
+from wyvrn.detectors.sensitive_data import detect_sensitive_data
+from wyvrn.detectors.excessive_data import detect_excessive_data
+from wyvrn.detectors.anomaly import detect_behavioral_anomaly
+
+from wyvrn.risk import calculate_risk
+from wyvrn.policy import evaluate_policy
 
 
 class WyvrnMiddleware(BaseHTTPMiddleware):
@@ -55,9 +54,7 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
         request_path = request.url.path
 
         if request_path.startswith("/proxy/"):
-            security_path = request_path[
-                len("/proxy"):
-            ]
+            security_path = request_path[len("/proxy"):]
         else:
             security_path = request_path
 
@@ -85,21 +82,102 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
         }
 
         # ============================================================
-        # REQUEST-SIDE DETECTORS
+        # REQUEST-SIDE DETECTION
         # ============================================================
 
-        findings = run_detectors(
+        request_findings = run_detectors(
             request_event
         )
 
-        if findings:
+        # ============================================================
+        # REQUEST-SIDE RISK
+        # ============================================================
+
+        request_risk = calculate_risk(
+            request_findings
+        )
+
+        request_policy = evaluate_policy(
+            request_risk
+        )
+
+        # ============================================================
+        # LOG REQUEST SECURITY DECISION
+        # ============================================================
+
+        print()
+        print("=" * 70)
+        print("🐉 WYVRN — REQUEST SECURITY DECISION")
+        print("=" * 70)
+
+        print(
+            json.dumps(
+                {
+                    "request_id": request_id,
+                    "path": security_path,
+                    "risk": request_risk,
+                    "policy": request_policy,
+                },
+                indent=2,
+            )
+        )
+
+        # ============================================================
+        # REQUEST-SIDE BLOCK
+        # ============================================================
+
+        if request_policy["action"] == "BLOCK":
+
             print()
             print("=" * 70)
-            print("🚨 WYVRN REQUEST SECURITY FINDINGS")
+            print("🛑 WYVRN BLOCKED REQUEST")
             print("=" * 70)
 
-            for finding in findings:
-                print(finding)
+            print(
+                f"Reason: {request_policy['reason']}"
+            )
+
+            return JSONResponse(
+                status_code=403,
+                content={
+                    "error": "Request blocked by WYVRN",
+                    "request_id": request_id,
+                    "risk_score": request_risk["risk_score"],
+                    "risk_level": request_risk["risk_level"],
+                    "action": "BLOCK",
+                    "detections": request_risk["detections"],
+                },
+            )
+
+        # ============================================================
+        # REQUEST-SIDE RATE LIMIT
+        # ============================================================
+
+        if request_policy["action"] == "RATE_LIMIT":
+
+            print()
+            print("=" * 70)
+            print("⏳ WYVRN RATE LIMITED REQUEST")
+            print("=" * 70)
+
+            print(
+                f"Reason: {request_policy['reason']}"
+            )
+
+            return JSONResponse(
+                status_code=429,
+                content={
+                    "error": "Request rate limited by WYVRN",
+                    "request_id": request_id,
+                    "risk_score": request_risk["risk_score"],
+                    "risk_level": request_risk["risk_level"],
+                    "action": "RATE_LIMIT",
+                    "detections": request_risk["detections"],
+                },
+                headers={
+                    "Retry-After": "10",
+                },
+            )
 
         # ============================================================
         # CONTINUE REQUEST
@@ -151,73 +229,46 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
             response_text = None
 
         # ============================================================
-        # RESPONSE-SIDE: SENSITIVE DATA
+        # RESPONSE-SIDE DETECTION
         # ============================================================
 
-        response_findings = detect_sensitive_data(
+        sensitive_findings = detect_sensitive_data(
             response_text
         )
 
-        if response_findings:
-            print()
-            print("=" * 70)
-            print("🚨 WYVRN RESPONSE SECURITY FINDINGS")
-            print("=" * 70)
-
-            for finding in response_findings:
-                print(finding)
-
-        # ============================================================
-        # RESPONSE-SIDE: EXCESSIVE DATA
-        # ============================================================
-
-        excessive_data_findings = (
-            detect_excessive_data(
-                security_path,
-                response_text,
-            )
+        excessive_findings = detect_excessive_data(
+            security_path,
+            response_text,
         )
 
-        if excessive_data_findings:
-            print()
-            print("=" * 70)
-            print("🚨 WYVRN EXCESSIVE DATA FINDINGS")
-            print("=" * 70)
-
-            for finding in excessive_data_findings:
-                print(finding)
-
-        # ============================================================
-        # RESPONSE-SIDE: BEHAVIORAL ANOMALY
-        # ============================================================
-
-        anomaly_findings = (
-            detect_behavioral_anomaly(
-                path=security_path,
-                response_size=response_size,
-                latency_ms=latency_ms,
-                status_code=status_code,
-            )
+        anomaly_findings = detect_behavioral_anomaly(
+            path=security_path,
+            response_size=response_size,
+            latency_ms=latency_ms,
+            status_code=status_code,
         )
 
-        if anomaly_findings:
-            print()
-            print("=" * 70)
-            print("🚨 WYVRN BEHAVIORAL ANOMALY FINDINGS")
-            print("=" * 70)
-
-            for finding in anomaly_findings:
-                print(finding)
-
         # ============================================================
-        # COMBINE ALL FINDINGS
+        # COMBINE FINDINGS
         # ============================================================
 
         all_findings = (
-            findings
-            + response_findings
-            + excessive_data_findings
+            request_findings
+            + sensitive_findings
+            + excessive_findings
             + anomaly_findings
+        )
+
+        # ============================================================
+        # FINAL RISK CALCULATION
+        # ============================================================
+
+        final_risk = calculate_risk(
+            all_findings
+        )
+
+        final_policy = evaluate_policy(
+            final_risk
         )
 
         # ============================================================
@@ -232,37 +283,79 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
         }
 
         # ============================================================
-        # LOG REQUEST
+        # LOG FINAL SECURITY DECISION
         # ============================================================
 
         print()
         print("=" * 70)
-        print("🐉 WYVRN SECURITY API — REQUEST")
+        print("🐉 WYVRN — FINAL SECURITY DECISION")
         print("=" * 70)
-        print(request_event)
+
+        print(
+            json.dumps(
+                {
+                    "request_id": request_id,
+                    "request": request_event,
+                    "response": response_event,
+                    "risk": final_risk,
+                    "policy": final_policy,
+                },
+                indent=2,
+            )
+        )
 
         # ============================================================
-        # LOG RESPONSE
+        # RESPONSE-SIDE BLOCK
         # ============================================================
 
-        print()
-        print("=" * 70)
-        print("🐉 WYVRN SECURITY API — RESPONSE")
-        print("=" * 70)
-        print(response_event)
+        if final_policy["action"] == "BLOCK":
 
-        # ============================================================
-        # LOG COMBINED SECURITY RESULT
-        # ============================================================
-
-        if all_findings:
             print()
             print("=" * 70)
-            print("🐉 WYVRN SECURITY API — ALL FINDINGS")
+            print("🛑 WYVRN BLOCKED RESPONSE")
             print("=" * 70)
 
-            for finding in all_findings:
-                print(finding)
+            print(
+                f"Reason: {final_policy['reason']}"
+            )
+
+            return JSONResponse(
+                status_code=403,
+                content={
+                    "error": "Response blocked by WYVRN",
+                    "request_id": request_id,
+                    "risk_score": final_risk["risk_score"],
+                    "risk_level": final_risk["risk_level"],
+                    "action": "BLOCK",
+                    "detections": final_risk["detections"],
+                },
+            )
+
+        # ============================================================
+        # RESPONSE-SIDE RATE LIMIT
+        # ============================================================
+
+        if final_policy["action"] == "RATE_LIMIT":
+
+            print()
+            print("=" * 70)
+            print("⏳ WYVRN RATE LIMITED RESPONSE")
+            print("=" * 70)
+
+            return JSONResponse(
+                status_code=429,
+                content={
+                    "error": "Response rate limited by WYVRN",
+                    "request_id": request_id,
+                    "risk_score": final_risk["risk_score"],
+                    "risk_level": final_risk["risk_level"],
+                    "action": "RATE_LIMIT",
+                    "detections": final_risk["detections"],
+                },
+                headers={
+                    "Retry-After": "10",
+                },
+            )
 
         # ============================================================
         # REBUILD RESPONSE
