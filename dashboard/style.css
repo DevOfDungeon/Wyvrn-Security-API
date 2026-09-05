@@ -592,3 +592,39 @@ body::before {
     color: var(--cream-dim);
 }
 
+/* =========================================================
+   SECTIONS
+========================================================= */
+
+.section {
+    margin-top: 38px;
+}
+
+.section-heading {
+    display: flex;
+
+    align-items: flex-end;
+
+    justify-content: space-between;
+
+    margin-bottom: 16px;
+}
+
+.section-heading h2 {
+    margin: 7px 0 0;
+
+    font-family: "Bebas Neue";
+
+    font-size: 37px;
+
+    line-height: 0.85;
+}
+
+.live-symbol {
+    color: var(--green);
+
+    font-size: 15px;
+
+    animation: livePulse 1.4s infinite;
+}
+
