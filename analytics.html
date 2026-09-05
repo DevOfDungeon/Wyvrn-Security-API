@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WYVRN Analytics</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Inter,sans-serif;
+}
+
+body{
+background:#0b1020;
+color:white;
+padding:30px;
+}
+
+h1{
+margin-bottom:25px;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:20px;
+}
+
+.card{
+background:#111827;
+border:1px solid #1f2937;
+border-radius:15px;
+padding:20px;
+}
+
+.metric{
+font-size:48px;
+font-weight:bold;
+margin-top:10px;
+color:#4f8cff;
+}
+
+.chart{
+height:220px;
+display:flex;
+align-items:flex-end;
+gap:15px;
+margin-top:20px;
+}
+
+.bar{
+width:50px;
+background:#2563eb;
+border-radius:8px 8px 0 0;
+}
+
+.bar1{height:90px;}
+.bar2{height:140px;}
+.bar3{height:180px;}
+.bar4{height:120px;}
+.bar5{height:200px;}
+
+</style>
+</head>
+
+<body>
+
+<h1>Analytics Dashboard</h1>
+
+<div class="grid">
+
+<div class="card">
+<h3>Total Requests Today</h3>
+<div class="metric">48K</div>
+</div>
+
+<div class="card">
+<h3>Blocked Threats</h3>
+<div class="metric">327</div>
+</div>
+
+<div class="card">
+<h3>Attack Trend</h3>
+
+<div class="chart">
+<div class="bar bar1"></div>
+<div class="bar bar2"></div>
+<div class="bar bar3"></div>
+<div class="bar bar4"></div>
+<div class="bar bar5"></div>
+</div>
+
+</div>
+
+<div class="card">
+<h3>Top Attack Type</h3>
+
+<br>
+
+<p>🥇 BOLA Attacks</p>
+<p>🥈 Rate Limit Abuse</p>
+<p>🥉 Data Exposure</p>
+
+</div>
+
+</div>
+
+</body>
+</html>

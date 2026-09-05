@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WYVRN Settings</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Inter,sans-serif;
+}
+
+body{
+background:#0b1020;
+color:white;
+padding:30px;
+}
+
+.card{
+background:#111827;
+border:1px solid #1f2937;
+border-radius:15px;
+padding:25px;
+max-width:700px;
+}
+
+h1{
+margin-bottom:25px;
+}
+
+.setting{
+margin-bottom:25px;
+}
+
+label{
+display:block;
+margin-bottom:10px;
+}
+
+select,input{
+width:100%;
+padding:12px;
+background:#1f2937;
+border:none;
+color:white;
+border-radius:8px;
+}
+
+button{
+margin-top:15px;
+padding:12px 20px;
+background:#2563eb;
+border:none;
+border-radius:8px;
+color:white;
+cursor:pointer;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>Settings</h1>
+
+<div class="card">
+
+<div class="setting">
+
+<label>Alert Sensitivity</label>
+
+<select>
+<option>Low</option>
+<option selected>Medium</option>
+<option>High</option>
+</select>
+
+</div>
+
+<div class="setting">
+
+<label>Auto Block Threats</label>
+
+<select>
+<option>Disabled</option>
+<option selected>Enabled</option>
+</select>
+
+</div>
+
+<div class="setting">
+
+<label>Notification Email</label>
+
+<input
+type="email"
+value="security@wyvrn.ai"
+>
+
+</div>
+
+<button>
+Save Changes
+</button>
+
+</div>
+
+</body>
+</html>
