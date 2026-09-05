@@ -213,3 +213,101 @@ async function loadThreats() {
     }
 
 }
+
+
+// =========================================================
+// DETECTION COUNTS
+// =========================================================
+
+function calculateDetectionCounts() {
+
+    detectionCounts = {};
+
+    DETECTIONS.forEach(
+        detection => {
+            detectionCounts[detection] = 0;
+        }
+    );
+
+    events.forEach(event => {
+
+        const detections =
+            event.risk?.detections ??
+            event.findings?.map(
+                finding =>
+                    finding.detection
+            ) ??
+            [];
+
+        detections.forEach(
+            detection => {
+
+                if (
+                    detectionCounts[detection]
+                    !== undefined
+                ) {
+
+                    detectionCounts[
+                        detection
+                    ]++;
+
+                }
+
+            }
+        );
+
+    });
+
+}
+
+
+function renderDetectionCards() {
+
+    const grid =
+        $("#detectionGrid");
+
+    grid.innerHTML = "";
+
+    DETECTIONS.forEach(
+        (detection, index) => {
+
+            const card =
+                document.createElement(
+                    "div"
+                );
+
+            card.className =
+                "detection-card";
+
+            const count =
+                detectionCounts[detection] || 0;
+
+            if (count > 0) {
+
+                card.classList.add(
+                    "active"
+                );
+
+            }
+
+            card.innerHTML = `
+                <div class="detection-icon">
+                    ${String(index + 1).padStart(2, "0")}
+                </div>
+
+                <div class="detection-name">
+                    ${formatDetection(detection)}
+                </div>
+
+                <div class="detection-count">
+                    ${count}
+                </div>
+            `;
+
+            grid.appendChild(card);
+
+        }
+    );
+
+}
+
