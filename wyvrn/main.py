@@ -15,24 +15,14 @@ app = FastAPI(
     version="0.1.0",
 )
 
-
 app.add_middleware(WyvrnMiddleware)
 
-
-# ============================================================
-# CONFIGURATION
-# ============================================================
 
 TARGET_API = "http://127.0.0.1:8000"
 
 
-# ============================================================
-# WYVRN INFORMATION
-# ============================================================
-
 @app.get("/")
 async def home():
-
     return {
         "service": "WYVRN Security API",
         "status": "running",
@@ -43,16 +33,11 @@ async def home():
 
 @app.get("/health")
 async def health():
-
     return {
         "service": "WYVRN Security API",
         "status": "healthy",
     }
 
-
-# ============================================================
-# PROXY
-# ============================================================
 
 @app.api_route(
     "/proxy/{path:path}",
@@ -66,29 +51,17 @@ async def health():
         "HEAD",
     ],
 )
-async def proxy(
-    path: str,
-    request: Request,
-):
-
-    # --------------------------------------------------------
-    # Build target URL
-    # --------------------------------------------------------
+async def proxy(path: str, request: Request):
+    """
+    Forward requests from WYVRN to the target API.
+    """
 
     target_url = f"{TARGET_API}/{path}"
 
     if request.url.query:
         target_url += f"?{request.url.query}"
 
-    # --------------------------------------------------------
-    # Read request body
-    # --------------------------------------------------------
-
     body = await request.body()
-
-    # --------------------------------------------------------
-    # Forward headers
-    # --------------------------------------------------------
 
     excluded_headers = {
         "host",
@@ -101,12 +74,7 @@ async def proxy(
         if key.lower() not in excluded_headers
     }
 
-    # --------------------------------------------------------
-    # Send request to Target API
-    # --------------------------------------------------------
-
     try:
-
         async with httpx.AsyncClient(
             timeout=10.0
         ) as client:
@@ -118,19 +86,13 @@ async def proxy(
                 content=body,
             )
 
-    except httpx.RequestError as exc:
+    except httpx.RequestError:
 
         return Response(
-            content=(
-                '{"error":"Target API unavailable"}'
-            ),
+            content='{"error":"Target API unavailable"}',
             status_code=502,
             media_type="application/json",
         )
-
-    # --------------------------------------------------------
-    # Forward response
-    # --------------------------------------------------------
 
     excluded_response_headers = {
         "content-length",
@@ -141,8 +103,7 @@ async def proxy(
     response_headers = {
         key: value
         for key, value in upstream_response.headers.items()
-        if key.lower()
-        not in excluded_response_headers
+        if key.lower() not in excluded_response_headers
     }
 
     return Response(
