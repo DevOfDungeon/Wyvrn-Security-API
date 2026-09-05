@@ -835,4 +835,179 @@ body::before {
 .hidden {
     display: none;
 }
+/* =========================================================
+   EVENT STREAM
+========================================================= */
+
+.event-stream {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 9px;
+}
+
+.event {
+    position: relative;
+
+    padding: 15px;
+
+    background: #12110f;
+
+    border:
+        1px solid
+        rgba(244,237,228,0.07);
+
+    border-radius: 15px;
+
+    box-shadow:
+        6px 8px 20px rgba(0,0,0,0.28);
+
+    animation:
+        eventIn 0.35s ease;
+}
+
+@keyframes eventIn {
+    from {
+        opacity: 0;
+
+        transform:
+            translateY(-10px)
+            rotate(-1deg);
+    }
+
+    to {
+        opacity: 1;
+
+        transform:
+            translateY(0)
+            rotate(0);
+    }
+}
+
+.event-top {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+}
+
+.event-detection {
+    font-size: 8px;
+
+    font-weight: 700;
+
+    letter-spacing: 1px;
+
+    color: var(--gold-bright);
+}
+
+.event-time {
+    font-size: 7px;
+
+    color: var(--cream-dim);
+}
+
+.event-path {
+    margin-top: 10px;
+
+    font-family:
+        "Space Grotesk",
+        monospace;
+
+    font-size: 11px;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+
+    white-space: nowrap;
+}
+
+.event-bottom {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    margin-top: 12px;
+}
+
+.event-action {
+    font-size: 7px;
+
+    font-weight: 700;
+
+    letter-spacing: 1px;
+
+    padding:
+        5px
+        8px;
+
+    border-radius: 12px;
+}
+
+.action-BLOCK {
+    background: rgba(255,105,95,0.14);
+
+    color: var(--red);
+}
+
+.action-RATE_LIMIT {
+    background: rgba(240,200,120,0.15);
+
+    color: var(--gold-bright);
+}
+
+.action-MONITOR {
+    background: rgba(232,211,160,0.12);
+
+    color: var(--gold-pale);
+}
+
+.action-ALLOW {
+    background: rgba(185,230,163,0.1);
+
+    color: var(--green);
+}
+
+.event-score {
+    font-family: "Bebas Neue";
+
+    font-size: 23px;
+
+    color: var(--gold);
+}
+
+.empty-state {
+    padding: 30px;
+
+    text-align: center;
+
+    border:
+        1px dashed
+        rgba(240,200,120,0.18);
+
+    border-radius: 15px;
+
+    color: var(--gold);
+
+    font-size: 8px;
+
+    letter-spacing: 1.5px;
+}
+
+.empty-state small {
+    display: block;
+
+    margin-top: 8px;
+
+    color: var(--cream-dim);
+
+    font-size: 9px;
+
+    letter-spacing: 0;
+}
 
