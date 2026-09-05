@@ -1189,4 +1189,46 @@ body::before {
 
     pointer-events: none;
 }
+/* =========================================================
+   FOOTER
+========================================================= */
+
+footer {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    margin-top: 55px;
+
+    padding-top: 18px;
+
+    border-top:
+        1px solid
+        rgba(244,237,228,0.08);
+
+    color: var(--cream-dim);
+
+    font-size: 6px;
+
+    letter-spacing: 1.2px;
+}
+
+.footer-brand {
+    font-family: "Bebas Neue";
+
+    font-size: 16px;
+
+    color: var(--gold);
+}
+
+
+/* =========================================================
+   MOBILE TOUCH
+========================================================= */
+
+button {
+    -webkit-tap-highlight-color: transparent;
+}
 
