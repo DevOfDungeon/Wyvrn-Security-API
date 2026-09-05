@@ -749,3 +749,80 @@ function handleLiveEvent(event) {
 
 }
 
+
+// =========================================================
+// LIVE STATS
+// =========================================================
+
+function updateLiveStats() {
+
+    const total =
+        events.length;
+
+
+    let blocked = 0;
+
+    let rateLimited = 0;
+
+    let threats = 0;
+
+
+    events.forEach(event => {
+
+        const action =
+            event.policy?.action;
+
+
+        if (action === "BLOCK") {
+
+            blocked++;
+
+        }
+
+
+        if (
+            action === "RATE_LIMIT"
+        ) {
+
+            rateLimited++;
+
+        }
+
+
+        const detections =
+            event.risk?.detections ??
+            [];
+
+
+        if (
+            detections.length > 0
+        ) {
+
+            threats +=
+                detections.length;
+
+        }
+
+    });
+
+
+    $("#totalRequests")
+        .textContent =
+        formatNumber(total);
+
+
+    $("#blockedRequests")
+        .textContent =
+        formatNumber(blocked);
+
+
+    $("#rateLimited")
+        .textContent =
+        formatNumber(rateLimited);
+
+
+    $("#threatCount")
+        .textContent =
+        formatNumber(threats);
+
+}
