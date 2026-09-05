@@ -1010,4 +1010,78 @@ body::before {
 
     letter-spacing: 0;
 }
+/* =========================================================
+   DETECTION GRID
+========================================================= */
+
+.detection-grid {
+    display: grid;
+
+    grid-template-columns:
+        1fr
+        1fr;
+
+    gap: 9px;
+}
+
+.detection-card {
+    min-height: 105px;
+
+    padding: 14px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(244,237,228,0.045),
+            rgba(244,237,228,0.015)
+        );
+
+    border:
+        1px solid
+        rgba(244,237,228,0.07);
+
+    border-radius: 15px;
+}
+
+.detection-card.active {
+    border-color:
+        rgba(240,200,120,0.35);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(240,200,120,0.1),
+            rgba(244,237,228,0.02)
+        );
+}
+
+.detection-icon {
+    font-family: "Bebas Neue";
+
+    font-size: 18px;
+
+    color: var(--gold);
+}
+
+.detection-name {
+    margin-top: 12px;
+
+    font-size: 8px;
+
+    line-height: 1.4;
+
+    font-weight: 700;
+
+    letter-spacing: 0.8px;
+}
+
+.detection-count {
+    margin-top: 7px;
+
+    font-family: "Bebas Neue";
+
+    font-size: 23px;
+
+    color: var(--gold-bright);
+}
 
