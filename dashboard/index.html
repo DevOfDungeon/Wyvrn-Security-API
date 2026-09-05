@@ -18,3 +18,402 @@
 </head>
 
 <body>
+<div class="app-shell">
+
+    <!-- =========================================================
+         DECORATIVE ELEMENTS
+    ========================================================== -->
+
+    <div class="grain"></div>
+
+    <div class="confetti confetti-1"></div>
+    <div class="confetti confetti-2"></div>
+    <div class="confetti confetti-3"></div>
+    <div class="confetti confetti-4"></div>
+
+    <!-- =========================================================
+         NAVIGATION
+    ========================================================== -->
+
+    <header class="topbar">
+
+        <div class="brand">
+
+            <div class="brand-mark">
+                W
+            </div>
+
+            <div>
+                <div class="brand-name">WYVRN</div>
+                <div class="brand-subtitle">SECURITY COMMAND</div>
+            </div>
+
+        </div>
+
+        <div class="connection">
+
+            <span class="connection-dot"></span>
+
+            <span id="connectionText">
+                LIVE
+            </span>
+
+        </div>
+
+    </header>
+
+<!-- =========================================================
+         HERO
+    ========================================================== -->
+
+    <section class="hero">
+            <span>
+                PROTECTION ACTIVE
+            </span>
+
+        </div>
+
+    </section>
+
+    <!-- =========================================================
+         RISK CARD
+    ========================================================== -->
+
+    <section class="risk-card">
+
+        <div class="risk-card-top">
+
+            <div>
+                <div class="eyebrow">
+                    CURRENT THREAT LEVEL
+                </div>
+
+                <div
+                    class="risk-level"
+                    id="riskLevel"
+                >
+                    LOW
+                </div>
+            </div>
+
+            <div class="risk-number">
+                <span id="riskScore">0</span>
+                <small>/100</small>
+            </div>
+
+        </div>
+
+        <div class="risk-bar">
+
+            <div
+                id="riskBar"
+                class="risk-bar-fill"
+            ></div>
+
+        </div>
+
+        <div class="risk-footer">
+
+            <span>
+                LIVE SECURITY SCORE
+            </span>
+
+            <span id="lastUpdated">
+                JUST NOW
+            </span>
+
+        </div>
+
+    </section>
+<!-- =========================================================
+         STATS
+    ========================================================== -->
+
+    <section class="stats-grid">
+
+        <article class="stat-card tilt-left">
+
+            <div class="stat-label">
+                REQUESTS
+            </div>
+
+            <div
+                class="stat-value"
+                id="totalRequests"
+            >
+                0
+            </div>
+
+            <div class="stat-foot">
+                INSPECTED
+            </div>
+
+        </article>
+
+
+        <article class="stat-card tilt-right">
+
+            <div class="stat-label">
+                BLOCKED
+            </div>
+
+            <div
+                class="stat-value"
+                id="blockedRequests"
+            >
+                0
+            </div>
+
+            <div class="stat-foot">
+                THREATS STOPPED
+            </div>
+
+        </article>
+
+
+        <article class="stat-card tilt-right">
+
+            <div class="stat-label">
+                RATE LIMITED
+            </div>
+
+            <div
+                class="stat-value"
+                id="rateLimited"
+            >
+                0
+            </div>
+
+            <div class="stat-foot">
+                ABUSE CONTROLLED
+            </div>
+
+        </article>
+
+
+        <article class="stat-card tilt-left">
+
+            <div class="stat-label">
+                THREATS
+            </div>
+
+            <div
+                class="stat-value"
+                id="threatCount"
+            >
+                0
+            </div>
+
+            <div class="stat-foot">
+                DETECTIONS
+            </div>
+
+        </article>
+
+    </section>
+
+<!-- =========================================================
+         ACTIVE CAMPAIGN
+    ========================================================== -->
+
+    <section
+        id="campaignSection"
+        class="campaign-card hidden"
+    >
+
+        <div class="campaign-stamp">
+            ACTIVE
+        </div>
+
+        <div class="campaign-header">
+
+            <div>
+
+                <div class="eyebrow">
+                    CORRELATED THREAT
+                </div>
+
+                <h2>
+                    ATTACK<br>
+                    CAMPAIGN
+                </h2>
+
+            </div>
+
+            <div
+                class="campaign-score"
+                id="campaignScore"
+            >
+                0
+            </div>
+
+        </div>
+
+        <div
+            class="campaign-severity"
+            id="campaignSeverity"
+        >
+            HIGH
+        </div>
+
+        <p id="campaignDescription">
+            Multiple hostile detections were observed
+            from the same source.
+        </p>
+
+        <div
+            class="campaign-detections"
+            id="campaignDetections"
+        ></div>
+
+        <div class="campaign-line"></div>
+
+        <div class="campaign-meta">
+
+            <span>
+                SOURCE
+            </span>
+
+            <strong id="campaignIP">
+                —
+            </strong>
+
+        </div>
+
+        <div class="campaign-meta">
+
+            <span>
+                EVENTS
+            </span>
+
+            <strong id="campaignEvents">
+                0
+            </strong>
+
+        </div>
+
+    </section>
+
+<!-- =========================================================
+         THREAT STREAM
+    ========================================================== -->
+
+    <section class="section">
+
+        <div class="section-heading">
+
+            <div>
+                <div class="eyebrow">
+                    REAL-TIME TELEMETRY
+                </div>
+
+                <h2>
+                    THREAT STREAM
+                </h2>
+            </div>
+
+            <div class="live-symbol">
+                ●
+            </div>
+
+        </div>
+
+        <div
+            id="eventStream"
+            class="event-stream"
+        >
+
+            <div class="empty-state">
+                <span>WAITING FOR TRAFFIC</span>
+                <small>
+                    Security events will appear here.
+                </small>
+            </div>
+
+        </div>
+
+    </section>
+<!-- =========================================================
+         DETECTIONS
+    ========================================================== -->
+
+    <section class="section">
+
+        <div class="section-heading">
+
+            <div>
+                <div class="eyebrow">
+                    DETECTION ENGINE
+                </div>
+
+                <h2>
+                    WHAT WYVRN SEES
+                </h2>
+            </div>
+
+        </div>
+
+        <div
+            id="detectionGrid"
+            class="detection-grid"
+        ></div>
+
+    </section>
+
+<!-- =========================================================
+         ATTACK SIMULATOR
+    ========================================================== -->
+
+    <section class="simulator">
+
+        <div class="simulator-copy">
+
+            <div class="eyebrow">
+                DEMONSTRATION MODE
+            </div>
+
+            <h2>
+                THROW<br>
+                SOMETHING<br>
+                AT WYVRN.
+            </h2>
+
+            <p>
+                Launch controlled attack scenarios
+                against the protected API.
+            </p>
+
+        </div>
+
+        <div
+            id="attackButtons"
+            class="attack-buttons"
+        ></div>
+
+    </section>
+
+<!-- =========================================================
+         FOOTER
+    ========================================================== -->
+
+    <footer>
+
+        <div class="footer-brand">
+            WYVRN
+        </div>
+
+        <div>
+            API SECURITY / THREAT CONTROL
+        </div>
+
+        <div>
+            v1.0
+        </div>
+
+    </footer>
+
+</div>
+
+
+
+
