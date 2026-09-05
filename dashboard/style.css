@@ -396,3 +396,128 @@ body::before {
     background: var(--black);
 }
 
+/* =========================================================
+   RISK
+========================================================= */
+
+.risk-card {
+    position: relative;
+
+    padding: 22px;
+
+    margin-bottom: 18px;
+
+    border-radius: var(--radius);
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(240,200,120,0.14),
+            rgba(255,255,255,0.035)
+        );
+
+    border:
+        1px solid
+        rgba(240,200,120,0.2);
+
+    box-shadow: var(--shadow);
+
+    overflow: hidden;
+}
+
+.risk-card::after {
+    content: "WYVRN";
+
+    position: absolute;
+
+    right: -8px;
+
+    bottom: -30px;
+
+    font-family: "Bebas Neue";
+
+    font-size: 100px;
+
+    color: rgba(240,200,120,0.035);
+}
+
+.risk-card-top {
+    display: flex;
+
+    align-items: flex-end;
+
+    justify-content: space-between;
+}
+
+.risk-level {
+    font-family: "Bebas Neue";
+
+    font-size: 42px;
+
+    line-height: 0.9;
+
+    margin-top: 8px;
+}
+
+.risk-number {
+    font-family: "Bebas Neue";
+
+    font-size: 54px;
+
+    line-height: 0.8;
+
+    color: var(--gold-bright);
+}
+
+.risk-number small {
+    font-family: "DM Sans";
+
+    font-size: 10px;
+
+    color: var(--cream-dim);
+}
+
+.risk-bar {
+    height: 6px;
+
+    margin-top: 24px;
+
+    background: rgba(244,237,228,0.1);
+
+    border-radius: 10px;
+
+    overflow: hidden;
+}
+
+.risk-bar-fill {
+    height: 100%;
+
+    width: 0%;
+
+    border-radius: inherit;
+
+    background:
+        linear-gradient(
+            90deg,
+            var(--gold-deep),
+            var(--gold-bright)
+        );
+
+    transition:
+        width 0.6s ease;
+}
+
+.risk-footer {
+    display: flex;
+
+    justify-content: space-between;
+
+    margin-top: 12px;
+
+    font-size: 7px;
+
+    letter-spacing: 1.5px;
+
+    color: var(--cream-dim);
+}
+
