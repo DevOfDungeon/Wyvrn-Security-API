@@ -75,6 +75,19 @@ background:#dc2626;
 <div class="card">
 
 <h3>Endpoints</h3>
+<input
+    type="text"
+    id="searchBox"
+    placeholder="Search endpoint..."
+    onkeyup="filterEndpoints()"
+    style="
+        width:100%;
+        padding:10px;
+        margin:15px 0;
+        border-radius:8px;
+        border:none;
+    "
+>
 
 <div class="endpoint" onclick="showEndpoint(1)">
 GET /api/users/:id
@@ -86,6 +99,22 @@ POST /api/login
 
 <div class="endpoint" onclick="showEndpoint(3)">
 GET /api/orders
+</div>
+
+<div class="endpoint" onclick="showEndpoint(4)">
+POST /api/payment
+</div>
+
+<div class="endpoint" onclick="showEndpoint(5)">
+GET /api/admin
+</div>
+
+<div class="endpoint" onclick="showEndpoint(4)">
+POST /api/payment
+</div>
+
+<div class="endpoint" onclick="showEndpoint(5)">
+GET /api/admin
 </div>
 
 </div>
@@ -183,10 +212,75 @@ document.getElementById("reason")
 "Sensitive order metadata exposed.";
 
 }
+if(id===4){
+
+document.getElementById("endpointTitle")
+.innerText="POST /api/payment";
+
+document.getElementById("riskScore")
+.innerText="91";
+
+document.getElementById("severity")
+.innerHTML="<span class='badge'>Critical</span>";
+
+document.getElementById("issue")
+.innerText="Payment Validation Risk";
+
+document.getElementById("reason")
+.innerText=
+"Insufficient transaction validation detected.";
+
+}
+
+if(id===5){
+
+document.getElementById("endpointTitle")
+.innerText="GET /api/admin";
+
+document.getElementById("riskScore")
+.innerText="95";
+
+document.getElementById("severity")
+.innerHTML="<span class='badge'>Critical</span>";
+
+document.getElementById("issue")
+.innerText="Privilege Escalation Risk";
+
+document.getElementById("reason")
+.innerText=
+"Potential unauthorized access to admin resources.";
+
+}
 
 }
 
 </script>
+function filterEndpoints(){
+
+    const input =
+        document.getElementById("searchBox")
+        .value
+        .toLowerCase();
+
+    const endpoints =
+        document.querySelectorAll(".endpoint");
+
+    endpoints.forEach(item => {
+
+        if(
+            item.textContent
+            .toLowerCase()
+            .includes(input)
+        ){
+            item.style.display = "block";
+        }
+        else{
+            item.style.display = "none";
+        }
+
+    });
+
+}
 
 </body>
 </html>
