@@ -252,23 +252,30 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
                 f"{request_policy['reason']}"
             )
 
-            security_event = build_security_event(
-                request_event=request_event,
-                response_event=None,
-                findings=request_findings,
-                risk_result=request_risk,
-                policy_result=request_policy,
-            )
+        security_event = build_security_event(
+            request_event=request_event,
+            response_event=response_event,
+            findings=all_findings,
+            risk_result=final_risk,
+            policy_result=final_policy,
+        )
 
-            store_event(
-                security_event
-            )
+        store_event(security_event)
 
-            await broadcast_event(
-                security_event
-            )
+        correlation = correlate_latest_event(
+            latest_event=security_event,
+            events=get_events(),
+        )
 
-            return JSONResponse(
+        if correlation is not None:
+            security_event["correlation"] = correlation
+
+        await broadcast_event(security_event)
+
+
+            
+
+        return JSONResponse(
                 status_code=403,
                 content={
                     "error": (
