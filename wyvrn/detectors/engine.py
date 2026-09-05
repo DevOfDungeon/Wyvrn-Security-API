@@ -8,6 +8,7 @@ def make_finding(
     reason: str,
     metadata: Dict[str, Any] | None = None,
 ) -> Dict[str, Any]:
+
     return {
         "detection": detection,
         "confidence": confidence,
@@ -23,14 +24,13 @@ def run_detectors(
 
     findings = []
 
-    from wyvrn.detectors.auth import detect_auth_abuse
     from wyvrn.detectors.bola import detect_bola
     from wyvrn.detectors.rate_limit import detect_rate_abuse
     from wyvrn.detectors.injection import detect_injection
 
-    findings.extend(
-        detect_auth_abuse(request_event)
-    )
+    # -----------------------------------------------------------------------
+    # Request-side detectors
+    # -----------------------------------------------------------------------
 
     findings.extend(
         detect_bola(request_event)
