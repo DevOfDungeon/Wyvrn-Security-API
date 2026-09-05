@@ -14,6 +14,33 @@ class SentinelMiddleware(BaseHTTPMiddleware):
 
         request_id = str(uuid.uuid4())
 
+        body = None
+
+        try:
+            body_bytes = await request.body()
+
+            if body_bytes:
+                body = body_bytes.decode("utf-8", errors="replace")
+
+        except Exception:
+            body = None
+
+        request_event = {
+            "request_id": request_id,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+
+            "method": request.method,
+            "path": request.url.path,
+
+            "client_ip": request.client.host
+            if request.client
+            else None,
+
+            "headers": dict(request.headers),
+            "query_params": dict(request.query_params),
+            "body": body,
+        }
+
         request_event = {
             "request_id": request_id,
             "timestamp": datetime.now(timezone.utc).isoformat(),
