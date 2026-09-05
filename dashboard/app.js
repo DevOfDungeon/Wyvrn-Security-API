@@ -441,3 +441,88 @@ function renderEvents() {
     });
 
 }
+
+
+// =========================================================
+// OVERALL RISK
+// =========================================================
+
+function calculateOverallRisk() {
+
+    if (!events.length) {
+
+        setRisk(
+            0,
+            "LOW"
+        );
+
+        return;
+
+    }
+
+
+    const recent =
+        events.slice(-20);
+
+
+    let highest =
+        0;
+
+
+    recent.forEach(event => {
+
+        const score =
+            event.risk?.score ??
+            event.risk?.risk_score ??
+            0;
+
+        highest =
+            Math.max(
+                highest,
+                Number(score) || 0
+            );
+
+    });
+
+
+    let level = "LOW";
+
+
+    if (highest >= 80) {
+
+        level = "CRITICAL";
+
+    } else if (highest >= 60) {
+
+        level = "HIGH";
+
+    } else if (highest >= 40) {
+
+        level = "MEDIUM";
+
+    }
+
+
+    setRisk(
+        highest,
+        level
+    );
+
+}
+
+
+function setRisk(
+    score,
+    level
+) {
+
+    $("#riskScore").textContent =
+        Math.round(score);
+
+    $("#riskLevel").textContent =
+        level;
+
+    $("#riskBar").style.width =
+        `${Math.min(score, 100)}%`;
+
+}
