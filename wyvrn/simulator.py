@@ -60,11 +60,10 @@ def get_attack(attack_name: str) -> Dict[str, Any]:
 
 
 def list_attacks() -> list[Dict[str, Any]]:
-    """
-    Return attack metadata for the dashboard.
-    """
-    return 
-[
+    
+    #Return attack metadata for the dashboard.
+    
+    return [
         {
             "id": attack_id,
             "name": attack["name"],
@@ -72,4 +71,4 @@ def list_attacks() -> list[Dict[str, Any]]:
             "path": attack["path"],
         }
         for attack_id, attack in ATTACKS.items()
-]
+    ]
