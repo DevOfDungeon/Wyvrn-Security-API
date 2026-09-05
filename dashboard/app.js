@@ -526,3 +526,226 @@ function setRisk(
         `${Math.min(score, 100)}%`;
 
 }
+
+
+// =========================================================
+// ATTACK CAMPAIGNS
+// =========================================================
+
+function updateCampaign() {
+
+    const campaign =
+        findCampaign();
+
+
+    if (!campaign) {
+
+        $("#campaignSection")
+            .classList.add("hidden");
+
+        return;
+
+    }
+
+
+    $("#campaignSection")
+        .classList.remove("hidden");
+
+
+    $("#campaignScore")
+        .textContent =
+        campaign.correlation_score ?? 0;
+
+
+    $("#campaignSeverity")
+        .textContent =
+        campaign.severity ?? "HIGH";
+
+
+    $("#campaignIP")
+        .textContent =
+        campaign.client_ip ?? "UNKNOWN";
+
+
+    $("#campaignEvents")
+        .textContent =
+        campaign.event_count ?? 0;
+
+
+    const detections =
+        campaign.unique_detections ??
+        [];
+
+
+    $("#campaignDetections")
+        .innerHTML =
+        detections
+            .map(
+                detection =>
+                    `
+                    <span class="detection-pill">
+                        ${formatDetection(detection)}
+                    </span>
+                    `
+            )
+            .join("");
+
+
+    $("#campaignDescription")
+        .textContent =
+        `${detections.length} different threat signals were correlated within a ${campaign.window_seconds ?? 60}-second window.`;
+
+}
+
+
+function findCampaign() {
+
+    for (
+        let i = events.length - 1;
+        i >= 0;
+        i--
+    ) {
+
+        if (
+            events[i].correlation &&
+            events[i].correlation.type ===
+                "ATTACK_CAMPAIGN"
+        ) {
+
+            return events[i].correlation;
+
+        }
+
+    }
+
+    return null;
+
+}
+
+
+// =========================================================
+// WEBSOCKET
+// =========================================================
+
+function connectWebSocket() {
+
+    const protocol =
+        location.protocol === "https:"
+            ? "wss:"
+            : "ws:";
+
+
+    const host =
+        location.host ||
+        "127.0.0.1:9000";
+
+
+    const socket =
+        new WebSocket(
+            `${protocol}//${host}/ws/events`
+        );
+
+
+    socket.onopen = () => {
+
+        $("#connectionText")
+            .textContent = "LIVE";
+
+        console.log(
+            "WYVRN WebSocket connected"
+        );
+
+    };
+
+
+    socket.onmessage = event => {
+
+        try {
+
+            const securityEvent =
+                JSON.parse(
+                    event.data
+                );
+
+
+            if (
+                securityEvent.type ===
+                "connection"
+            ) {
+
+                return;
+
+            }
+
+
+            handleLiveEvent(
+                securityEvent
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Invalid WebSocket event:",
+                error
+            );
+
+        }
+
+    };
+
+
+    socket.onclose = () => {
+
+        $("#connectionText")
+            .textContent =
+            "RECONNECTING";
+
+
+        setTimeout(
+            connectWebSocket,
+            2000
+        );
+
+    };
+
+
+    socket.onerror = error => {
+
+        console.error(
+            "WYVRN WebSocket error:",
+            error
+        );
+
+    };
+
+}
+
+
+function handleLiveEvent(event) {
+
+    events.push(event);
+
+    if (events.length > 100) {
+
+        events =
+            events.slice(-100);
+
+    }
+
+
+    calculateDetectionCounts();
+
+    renderEvents();
+
+    renderDetectionCards();
+
+    calculateOverallRisk();
+
+    updateCampaign();
+
+    updateLiveStats();
+
+    flashDashboard();
+
+}
+
