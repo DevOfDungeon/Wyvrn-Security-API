@@ -26,10 +26,14 @@ from wyvrn.risk import calculate_risk
 from wyvrn.policy import evaluate_policy
 
 from wyvrn.events import build_security_event
-from wyvrn.store import store_event
+from wyvrn.store import (
+    store_event,
+    get_events,
+)
 from wyvrn.ws import broadcast_event
-
-
+from wyvrn.correlation import (
+    correlate_latest_event,
+)
 class WyvrnMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(
