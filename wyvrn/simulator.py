@@ -58,6 +58,7 @@ ATTACKS = {
 WYVRN_URL = "http://127.0.0.1:9000"
 
 RATE_ABUSE_REQUEST_COUNT = 15
+ANOMALY_BASELINE_REQUEST_COUNT = 5
 
 
 def get_attack(attack_name: str):
@@ -179,6 +180,121 @@ async def run_rate_abuse():
         "responses": results,
     }
 
+async def run_anomaly():
+    attack = ATTACKS["anomaly"]
+
+    results = []
+
+    async with httpx.AsyncClient(
+        timeout=10.0
+    ) as client:
+
+        # Establish normal baseline
+        for index in range(
+            ANOMALY_BASELINE_REQUEST_COUNT
+        ):
+            try:
+                response = await client.request(
+                    method=attack["method"],
+                    url=(
+                        WYVRN_URL
+                        + attack["path"]
+                    ),
+                    params={
+                        "q": "normal-search"
+                    },
+                    headers=attack.get(
+                        "headers",
+                        {},
+                    ),
+                )
+
+                results.append(
+                    {
+                        "request_number": index + 1,
+                        "type": "baseline",
+                        "status_code": response.status_code,
+                        "body": response.text,
+                    }
+                )
+
+            except Exception as exc:
+                results.append(
+                    {
+                        "request_number": index + 1,
+                        "type": "baseline",
+                        "status_code": None,
+                        "error": str(exc),
+                    }
+                )
+
+            await asyncio.sleep(0)
+
+        # Send anomalous request
+        try:
+            response = await client.request(
+                method=attack["method"],
+                url=(
+                    WYVRN_URL
+                    + attack["path"]
+                ),
+                params={
+                    "q": "ANOMALY_TEST"
+                },
+                headers=attack.get(
+                    "headers",
+                    {},
+                ),
+            )
+
+            results.append(
+                {
+                    "request_number": (
+                        ANOMALY_BASELINE_REQUEST_COUNT
+                        + 1
+                    ),
+                    "type": "anomaly",
+                    "status_code": response.status_code,
+                    "body": response.text,
+                }
+            )
+
+            anomaly_response = {
+                "status_code": response.status_code,
+                "body": response.text,
+            }
+
+        except Exception as exc:
+            anomaly_response = {
+                "status_code": None,
+                "error": str(exc),
+            }
+
+    return {
+        "success": True,
+        "attack": "anomaly",
+        "name": attack["name"],
+        "request": {
+            "method": attack["method"],
+            "path": attack["path"],
+            "query": {
+                "baseline": "normal-search",
+                "anomaly": "ANOMALY_TEST",
+            },
+        },
+        "baseline": {
+            "requests": ANOMALY_BASELINE_REQUEST_COUNT,
+        },
+        "anomaly": {
+            "query": "ANOMALY_TEST",
+            "blocked": (
+                anomaly_response.get("status_code")
+                in (403, 429)
+            ),
+            "response": anomaly_response,
+        },
+        "responses": results,
+    }
 
 async def run_attack(
     attack_name: str,
@@ -193,6 +309,8 @@ async def run_attack(
 
     if attack_name == "rate_abuse":
         return await run_rate_abuse()
+    if attack_name == "anomaly":
+        return await run_anomaly()
 
     attack = get_attack(
         attack_name
