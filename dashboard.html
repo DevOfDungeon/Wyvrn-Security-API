@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Wyvrn Security Dashboard</title>
+
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="layout">
+
+    <!-- SIDEBAR -->
+
+    <aside class="sidebar">
+
+        <div class="logo">
+            <h1>WYVRN</h1>
+            <span>API Security Control Plane</span>
+        </div>
+
+        <nav>
+
+            <a href="#" class="active">Dashboard</a>
+
+            <a href="#">Endpoints</a>
+
+            <a href="#">Threat Monitor</a>
+
+            <a href="#">Alerts</a>
+
+            <a href="#">Policies</a>
+
+            <a href="#">Analytics</a>
+
+            <a href="#">Settings</a>
+
+        </nav>
+
+    </aside>
+
+    <!-- MAIN -->
+
+    <main class="main-content">
+
+        <header class="topbar">
+
+            <div>
+                <h2>Security Dashboard</h2>
+                <p>Real-time API Monitoring</p>
+            </div>
+
+            <div class="user-info">
+                <span id="userRole">Loading...</span>
+            </div>
+
+        </header>
+
+        <!-- KPI ROW -->
+
+        <section class="stats-grid">
+
+            <div class="card stat-card">
+                <h3>Total APIs</h3>
+                <p id="totalApis">--</p>
+            </div>
+
+            <div class="card stat-card">
+                <h3>Alerts</h3>
+                <p id="alerts">--</p>
+            </div>
+
+            <div class="card stat-card">
+                <h3>Active Threats</h3>
+                <p id="activeThreats">--</p>
+            </div>
+
+            <div class="card stat-card">
+                <h3>Blocked Requests</h3>
+                <p id="blockedRequests">--</p>
+            </div>
+
+        </section>
+
+        <!-- THREAT LEVEL -->
+
+        <section class="risk-section">
+
+            <div class="card risk-card">
+
+                <h3>Overall Threat Score</h3>
+
+                <div class="risk-circle">
+                    <span id="riskScore">--</span>
+                </div>
+
+                <h4 id="riskLabel">Loading...</h4>
+
+            </div>
+
+        </section>
+
+        <!-- LIVE THREATS -->
+
+        <section class="threat-grid">
+
+            <div class="card threat-stream">
+
+                <h3>Live Threat Stream</h3>
+
+                <div id="threatList">
+
+                </div>
+
+            </div>
+
+            <div class="card endpoint-summary">
+
+                <h3>High Risk Endpoints</h3>
+
+                <div id="endpointList">
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+<script src="dashboard.js"></script>
+
+</body>
+</html>
