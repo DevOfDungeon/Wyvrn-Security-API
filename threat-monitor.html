@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WYVRN Threat Monitor</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Inter,sans-serif;
+}
+
+body{
+background:#0b1020;
+color:white;
+padding:30px;
+}
+
+h1{
+margin-bottom:20px;
+}
+
+.grid{
+display:grid;
+grid-template-columns:2fr 1fr;
+gap:20px;
+}
+
+.card{
+background:#111827;
+border:1px solid #1f2937;
+border-radius:15px;
+padding:20px;
+}
+
+.threat{
+padding:15px;
+margin-bottom:12px;
+border-radius:10px;
+background:#1f2937;
+}
+
+.critical{
+border-left:5px solid #dc2626;
+}
+
+.high{
+border-left:5px solid #f97316;
+}
+
+.medium{
+border-left:5px solid #eab308;
+}
+
+.metric{
+font-size:40px;
+font-weight:bold;
+margin-top:10px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>Threat Monitor</h1>
+
+<div class="grid">
+
+<div class="card">
+
+<h2>Live Threat Feed</h2>
+
+<br>
+
+<div class="threat critical">
+🔴 Critical Attack Detected
+<br><br>
+Endpoint: GET /api/users/:id
+<br>
+Attack: Broken Object Level Authorization
+</div>
+
+<div class="threat high">
+🟠 Login Abuse
+<br><br>
+Endpoint: POST /api/login
+<br>
+Attack: Brute Force Attempts
+</div>
+
+<div class="threat medium">
+🟡 Data Exposure Warning
+<br><br>
+Endpoint: GET /api/orders
+<br>
+Attack: Sensitive Metadata Leakage
+</div>
+
+</div>
+
+<div>
+
+<div class="card">
+
+<h3>Active Threats</h3>
+
+<div class="metric">
+4
+</div>
+
+</div>
+
+<br>
+
+<div class="card">
+
+<h3>Blocked Requests</h3>
+
+<div class="metric">
+37
+</div>
+
+</div>
+
+<br>
+
+<div class="card">
+
+<h3>System Status</h3>
+
+<div class="metric">
+SAFE
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</body>
+</html>
