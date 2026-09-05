@@ -34,7 +34,4 @@ def build_security_event(
             "action": policy_result["action"],
             "reason": policy_result["reason"],
         },
-
-        connections.discard(
-            websocket
-        )
+    }

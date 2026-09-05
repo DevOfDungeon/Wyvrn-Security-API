@@ -14,16 +14,10 @@ from wyvrn.policy import (
     set_policies,
 )
 
-from wyvrn.events import (
-    add_connection,
-    remove_connection,
-)
-
 from wyvrn.ws import (
     add_connection,
     remove_connection,
 )
-
 
 
 # ============================================================
