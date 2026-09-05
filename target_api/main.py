@@ -57,6 +57,13 @@ async def health():
         "status": "healthy",
     }
 
+@app.get("/profile")
+async def get_profile():
+
+    # INTENTIONALLY VULNERABLE:
+    # This endpoint exposes sensitive user information.
+
+    return USERS[1]
 
 @app.get("/users/{user_id}")
 async def get_user(user_id: int):
