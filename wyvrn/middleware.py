@@ -118,6 +118,68 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
         }
 
         # ===================================================================
+        # WYVRN CONTROL-PLANE ROUTES
+        # ===================================================================
+        #
+        # These endpoints belong to WYVRN itself rather than the protected
+        # target API. Their JSON responses contain security-related words
+        # such as "SQL_INJECTION", "detections", "policy", etc.
+        #
+        # Running response-side threat detectors against these responses
+        # would cause WYVRN to detect its own dashboard data.
+        #
+        # We therefore skip security inspection for these routes.
+        #
+        # The actual protected API remains under /proxy/* and continues
+        # through the complete detection pipeline.
+        # ===================================================================
+
+        internal_routes = (
+            "/",
+            "/health",
+            "/api/",
+            "/ws/",
+            "/docs",
+            "/redoc",
+            "/openapi.json",
+        )
+
+        is_internal_route = (
+            request_path == "/"
+            or any(
+                request_path.startswith(route)
+                for route in internal_routes
+                if route != "/"
+            )
+        )
+
+        # ===================================================================
+        # INTERNAL WYVRN ROUTES
+        # ===================================================================
+
+        if is_internal_route:
+
+            response = await call_next(
+                request
+            )
+
+            response_body = b""
+
+            async for chunk in response.body_iterator:
+
+                response_body += chunk
+
+            return Response(
+                content=response_body,
+                status_code=response.status_code,
+                headers=dict(
+                    response.headers
+                ),
+                media_type=response.media_type,
+                background=response.background,
+            )
+
+        # ===================================================================
         # REQUEST-SIDE DETECTION
         # ===================================================================
 
@@ -182,10 +244,6 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
                 security_event
             )
 
-            # --------------------------------------------------------------
-            # LIVE DASHBOARD BROADCAST
-            # --------------------------------------------------------------
-
             await broadcast_event(
                 security_event
             )
@@ -245,10 +303,6 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
             store_event(
                 security_event
             )
-
-            # --------------------------------------------------------------
-            # LIVE DASHBOARD BROADCAST
-            # --------------------------------------------------------------
 
             await broadcast_event(
                 security_event
@@ -334,11 +388,6 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
         # ===================================================================
         # RESPONSE-SIDE DETECTION
         # ===================================================================
-
-        # Authentication abuse is response-aware.
-        #
-        # We only count the login attempt if the upstream
-        # API actually returned HTTP 401.
 
         auth_findings = detect_auth_abuse(
             request_event=request_event,
