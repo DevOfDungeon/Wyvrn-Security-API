@@ -1033,3 +1033,656 @@ function escapeHTML(value) {
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
 }
+
+
+// =========================================================
+// OVERALL RISK
+// =========================================================
+
+function calculateOverallRisk() {
+
+    if (!events.length) {
+
+        setRisk(
+            0,
+            "LOW"
+        );
+
+        return;
+
+    }
+
+
+    const recent =
+        events.slice(-20);
+
+
+    let highest =
+        0;
+
+
+    recent.forEach(event => {
+
+        const score =
+            event.risk?.score ??
+            event.risk?.risk_score ??
+            0;
+
+        highest =
+            Math.max(
+                highest,
+                Number(score) || 0
+            );
+
+    });
+
+
+    let level = "LOW";
+
+
+    if (highest >= 80) {
+
+        level = "CRITICAL";
+
+    } else if (highest >= 60) {
+
+        level = "HIGH";
+
+    } else if (highest >= 40) {
+
+        level = "MEDIUM";
+
+    }
+
+
+    setRisk(
+        highest,
+        level
+    );
+
+}
+
+
+function setRisk(
+    score,
+    level
+) {
+
+    $("#riskScore").textContent =
+        Math.round(score);
+
+    $("#riskLevel").textContent =
+        level;
+
+    $("#riskBar").style.width =
+        `${Math.min(score, 100)}%`;
+
+}
+
+
+// =========================================================
+// ATTACK CAMPAIGNS
+// =========================================================
+
+function updateCampaign() {
+
+    const campaign =
+        findCampaign();
+
+
+    if (!campaign) {
+
+        $("#campaignSection")
+            .classList.add("hidden");
+
+        return;
+
+    }
+
+
+    $("#campaignSection")
+        .classList.remove("hidden");
+
+
+    $("#campaignScore")
+        .textContent =
+        campaign.correlation_score ?? 0;
+
+
+    $("#campaignSeverity")
+        .textContent =
+        campaign.severity ?? "HIGH";
+
+
+    $("#campaignIP")
+        .textContent =
+        campaign.client_ip ?? "UNKNOWN";
+
+
+    $("#campaignEvents")
+        .textContent =
+        campaign.event_count ?? 0;
+
+
+    const detections =
+        campaign.unique_detections ??
+        [];
+
+
+    $("#campaignDetections")
+        .innerHTML =
+        detections
+            .map(
+                detection =>
+                    `
+                    <span class="detection-pill">
+                        ${formatDetection(detection)}
+                    </span>
+                    `
+            )
+            .join("");
+
+
+    $("#campaignDescription")
+        .textContent =
+        `${detections.length} different threat signals were correlated within a ${campaign.window_seconds ?? 60}-second window.`;
+
+}
+
+
+function findCampaign() {
+
+    for (
+        let i = events.length - 1;
+        i >= 0;
+        i--
+    ) {
+
+        if (
+            events[i].correlation &&
+            events[i].correlation.type ===
+                "ATTACK_CAMPAIGN"
+        ) {
+
+            return events[i].correlation;
+
+        }
+
+    }
+
+    return null;
+
+}
+
+
+// =========================================================
+// WEBSOCKET
+// =========================================================
+
+function connectWebSocket() {
+
+    const protocol =
+        location.protocol === "https:"
+            ? "wss:"
+            : "ws:";
+
+
+    const host =
+        location.host ||
+        "127.0.0.1:9000";
+
+
+    const socket =
+        new WebSocket(
+            `${protocol}//${host}/ws/events`
+        );
+
+
+    socket.onopen = () => {
+
+        $("#connectionText")
+            .textContent = "LIVE";
+
+        console.log(
+            "WYVRN WebSocket connected"
+        );
+
+    };
+
+
+    socket.onmessage = event => {
+
+        try {
+
+            const securityEvent =
+                JSON.parse(
+                    event.data
+                );
+
+
+            if (
+                securityEvent.type ===
+                "connection"
+            ) {
+
+                return;
+
+            }
+
+
+            handleLiveEvent(
+                securityEvent
+            );
+
+        } catch (error) {
+
+            console.error(
+                "Invalid WebSocket event:",
+                error
+            );
+
+        }
+
+    };
+
+
+    socket.onclose = () => {
+
+        $("#connectionText")
+            .textContent =
+            "RECONNECTING";
+
+
+        setTimeout(
+            connectWebSocket,
+            2000
+        );
+
+    };
+
+
+    socket.onerror = error => {
+
+        console.error(
+            "WYVRN WebSocket error:",
+            error
+        );
+
+    };
+
+}
+
+
+function handleLiveEvent(event) {
+
+    events.push(event);
+
+    if (events.length > 100) {
+
+        events =
+            events.slice(-100);
+
+    }
+
+
+    calculateDetectionCounts();
+
+    renderEvents();
+
+    renderDetectionCards();
+
+    calculateOverallRisk();
+
+    updateCampaign();
+
+    updateLiveStats();
+
+    flashDashboard();
+
+}
+
+
+// =========================================================
+// LIVE STATS
+// =========================================================
+
+function updateLiveStats() {
+
+    const total =
+        events.length;
+
+
+    let blocked = 0;
+
+    let rateLimited = 0;
+
+    let threats = 0;
+
+
+    events.forEach(event => {
+
+        const action =
+            event.policy?.action;
+
+
+        if (action === "BLOCK") {
+
+            blocked++;
+
+        }
+
+
+        if (
+            action === "RATE_LIMIT"
+        ) {
+
+            rateLimited++;
+
+        }
+
+
+        const detections =
+            event.risk?.detections ??
+            [];
+
+
+        if (
+            detections.length > 0
+        ) {
+
+            threats +=
+                detections.length;
+
+        }
+
+    });
+
+
+    $("#totalRequests")
+        .textContent =
+        formatNumber(total);
+
+
+    $("#blockedRequests")
+        .textContent =
+        formatNumber(blocked);
+
+
+    $("#rateLimited")
+        .textContent =
+        formatNumber(rateLimited);
+
+
+    $("#threatCount")
+        .textContent =
+        formatNumber(threats);
+
+}
+
+
+// =========================================================
+// ATTACK SIMULATOR
+// =========================================================
+
+async function loadAttacks() {
+
+    const container =
+        $("#attackButtons");
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_BASE}/api/simulator/attacks`
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Could not load attacks"
+            );
+
+        }
+
+
+        const attacks =
+            await response.json();
+
+
+        const list =
+            Array.isArray(attacks)
+                ? attacks
+                : attacks.attacks ?? [];
+
+
+        container.innerHTML = "";
+
+
+        list.forEach(
+            attack => {
+
+                const button =
+                    document.createElement(
+                        "button"
+                    );
+
+
+                button.className =
+                    "attack-button";
+
+
+                button.textContent =
+                    attack.name ??
+                    attack.id;
+
+
+                button.onclick =
+                    () =>
+                        runAttack(
+                            attack.id
+                        );
+
+
+                container.appendChild(
+                    button
+                );
+
+            }
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            "Could not load attack simulator:",
+            error
+        );
+
+
+        container.innerHTML = `
+            <button
+                class="attack-button"
+                onclick="runAttack('sql_injection')"
+            >
+                SQL INJECTION
+            </button>
+
+            <button
+                class="attack-button"
+                onclick="runAttack('bola_idor')"
+            >
+                BOLA / IDOR
+            </button>
+
+            <button
+                class="attack-button"
+                onclick="runAttack('auth_abuse')"
+            >
+                AUTH ABUSE
+            </button>
+        `;
+
+    }
+
+}
+
+
+async function runAttack(
+    attackName
+) {
+
+    const buttons =
+        document.querySelectorAll(
+            ".attack-button"
+        );
+
+
+    buttons.forEach(
+        button =>
+            button.classList.add(
+                "running"
+            )
+    );
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_BASE}/api/simulator/run/${encodeURIComponent(
+                    attackName
+                )}`,
+                {
+                    method: "POST"
+                }
+            );
+
+
+        const result =
+            await response.json();
+
+
+        console.log(
+            "Attack result:",
+            result
+        );
+
+
+        await loadEvents();
+
+
+    } catch (error) {
+
+        console.error(
+            "Attack failed:",
+            error
+        );
+
+    } finally {
+
+        buttons.forEach(
+            button =>
+                button.classList.remove(
+                    "running"
+                )
+        );
+
+    }
+
+}
+
+
+// =========================================================
+// VISUAL FEEDBACK
+// =========================================================
+
+function flashDashboard() {
+
+    const card =
+        $(".risk-card");
+
+
+    card.animate(
+        [
+            {
+                transform:
+                    "scale(1)"
+            },
+
+            {
+                transform:
+                    "scale(1.015)"
+            },
+
+            {
+                transform:
+                    "scale(1)"
+            }
+        ],
+        {
+            duration: 400,
+            easing: "ease-out"
+        }
+    );
+
+}
+
+
+// =========================================================
+// HELPERS
+// =========================================================
+
+function formatNumber(
+    value
+) {
+
+    return Number(
+        value || 0
+    ).toLocaleString();
+
+}
+
+
+function formatDetection(
+    detection
+) {
+
+    return String(
+        detection || "UNKNOWN"
+    )
+        .replaceAll(
+            "_",
+            " "
+        );
+
+}
+
+
+function formatTime(
+    timestamp
+) {
+
+    try {
+
+        const date =
+            new Date(timestamp);
+
+
+        return date.toLocaleTimeString(
+            [],
+            {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit"
+            }
+        );
+
+    } catch {
+
+        return "NOW";
+
+    }
+
+}
