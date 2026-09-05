@@ -65,13 +65,13 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
         findings = run_detectors(request_event)
 
         if findings:
-        print()
-        print("=" * 70)
-        print("🚨 WYVRN SECURITY FINDINGS")
-        print("=" * 70)
+            print()
+            print("=" * 70)
+            print("🚨 WYVRN SECURITY FINDINGS")
+            print("=" * 70)
 
-        for finding in findings:
-            print(finding)
+            for finding in findings:
+                print(finding)
 
         print()
         print("=" * 70)
