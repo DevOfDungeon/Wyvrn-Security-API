@@ -20,6 +20,9 @@ from wyvrn.detectors.excessive_data import (
 from wyvrn.detectors.anomaly import (
     detect_behavioral_anomaly,
 )
+from wyvrn.detectors.rate_limit import (
+    detect_rate_abuse,
+)
 
 from wyvrn.risk import calculate_risk
 from wyvrn.policy import evaluate_policy
@@ -43,9 +46,9 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
             uuid.uuid4()
         )
 
-        # ===================================================================
-        # CAPTURE REQUEST
-        # ===================================================================
+        # -------------------------------------------------------------------
+        # Capture request body
+        # -------------------------------------------------------------------
 
         try:
 
@@ -59,37 +62,35 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
                 )
 
             else:
-
                 body = None
 
         except Exception:
 
             body = None
 
-        request_path = request.url.path
+        # -------------------------------------------------------------------
+        # Normalize request path
+        # -------------------------------------------------------------------
 
-        # Normalize proxied requests.
-        #
-        # /proxy/users/1
-        #
-        # becomes:
-        #
-        # /users/1
+        request_path = request.url.path
 
         if request_path.startswith(
             "/proxy/"
         ):
 
             security_path = request_path[
-                len("/proxy"):
+                len("/proxy") :
             ]
 
         else:
 
             security_path = request_path
 
-        request_event = {
+        # -------------------------------------------------------------------
+        # Build request event
+        # -------------------------------------------------------------------
 
+        request_event = {
             "request_id": request_id,
 
             "timestamp": datetime.now(
@@ -117,22 +118,15 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
             "body": body,
         }
 
-        # ===================================================================
-        # WYVRN CONTROL-PLANE ROUTES
-        # ===================================================================
+        # -------------------------------------------------------------------
+        # WYVRN internal/control-plane routes
         #
         # These endpoints belong to WYVRN itself rather than the protected
-        # target API. Their JSON responses contain security-related words
-        # such as "SQL_INJECTION", "detections", "policy", etc.
+        # target API. They should not be inspected as security events.
         #
-        # Running response-side threat detectors against these responses
-        # would cause WYVRN to detect its own dashboard data.
-        #
-        # We therefore skip security inspection for these routes.
-        #
-        # The actual protected API remains under /proxy/* and continues
-        # through the complete detection pipeline.
-        # ===================================================================
+        # This prevents dashboard responses containing words such as
+        # SQL_INJECTION or detections from becoming false-positive findings.
+        # -------------------------------------------------------------------
 
         internal_routes = (
             "/",
@@ -152,10 +146,6 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
                 if route != "/"
             )
         )
-
-        # ===================================================================
-        # INTERNAL WYVRN ROUTES
-        # ===================================================================
 
         if is_internal_route:
 
@@ -179,12 +169,34 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
                 background=response.background,
             )
 
-        # ===================================================================
+        # -------------------------------------------------------------------
         # REQUEST-SIDE DETECTION
-        # ===================================================================
+        # -------------------------------------------------------------------
 
         request_findings = run_detectors(
             request_event
+        )
+
+        # Authentication abuse detection.
+        #
+        # This catches things such as obviously invalid bearer tokens
+        # before the request reaches the target API.
+        auth_request_findings = detect_auth_abuse(
+            request_event=request_event,
+            response_status_code=None,
+        )
+
+        # Rate abuse detection.
+        #
+        # This maintains a rolling request history per client IP.
+        rate_findings = detect_rate_abuse(
+            request_event
+        )
+
+        request_findings = (
+            request_findings
+            + auth_request_findings
+            + rate_findings
         )
 
         request_risk = calculate_risk(
@@ -196,11 +208,15 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
         )
 
         print()
-        print("=" * 70)
+        print(
+            "=" * 70
+        )
         print(
             "🐉 WYVRN — REQUEST SECURITY DECISION"
         )
-        print("=" * 70)
+        print(
+            "=" * 70
+        )
 
         print(
             json.dumps(
@@ -214,19 +230,24 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
             )
         )
 
-        # ===================================================================
-        # REQUEST-SIDE BLOCK
-        # ===================================================================
+        # -------------------------------------------------------------------
+        # BLOCK request immediately
+        # -------------------------------------------------------------------
 
-        if request_policy["action"] == "BLOCK":
+        if request_policy[
+            "action"
+        ] == "BLOCK":
 
             print()
-            print("=" * 70)
+            print(
+                "=" * 70
+            )
             print(
                 "🛑 WYVRN BLOCKED REQUEST"
             )
-            print("=" * 70)
-
+            print(
+                "=" * 70
+            )
             print(
                 f"Reason: "
                 f"{request_policy['reason']}"
@@ -254,18 +275,23 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
                     "error": (
                         "Request blocked by WYVRN"
                     ),
+
                     "request_id": request_id,
+
                     "risk_score": (
                         request_risk[
                             "risk_score"
                         ]
                     ),
+
                     "risk_level": (
                         request_risk[
                             "risk_level"
                         ]
                     ),
+
                     "action": "BLOCK",
+
                     "detections": (
                         request_risk[
                             "detections"
@@ -274,19 +300,24 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
                 },
             )
 
-        # ===================================================================
-        # REQUEST-SIDE RATE LIMIT
-        # ===================================================================
+        # -------------------------------------------------------------------
+        # RATE_LIMIT request immediately
+        # -------------------------------------------------------------------
 
-        if request_policy["action"] == "RATE_LIMIT":
+        if request_policy[
+            "action"
+        ] == "RATE_LIMIT":
 
             print()
-            print("=" * 70)
+            print(
+                "=" * 70
+            )
             print(
                 "⏳ WYVRN RATE LIMITED REQUEST"
             )
-            print("=" * 70)
-
+            print(
+                "=" * 70
+            )
             print(
                 f"Reason: "
                 f"{request_policy['reason']}"
@@ -312,43 +343,48 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
                 status_code=429,
                 content={
                     "error": (
-                        "Request rate limited "
-                        "by WYVRN"
+                        "Request rate limited by WYVRN"
                     ),
+
                     "request_id": request_id,
+
                     "risk_score": (
                         request_risk[
                             "risk_score"
                         ]
                     ),
+
                     "risk_level": (
                         request_risk[
                             "risk_level"
                         ]
                     ),
+
                     "action": "RATE_LIMIT",
+
                     "detections": (
                         request_risk[
                             "detections"
                         ]
                     ),
                 },
+
                 headers={
                     "Retry-After": "10",
                 },
             )
 
-        # ===================================================================
-        # FORWARD REQUEST TO TARGET API
-        # ===================================================================
+        # -------------------------------------------------------------------
+        # Request allowed through to target API
+        # -------------------------------------------------------------------
 
         response = await call_next(
             request
         )
 
-        # ===================================================================
-        # CAPTURE RESPONSE
-        # ===================================================================
+        # -------------------------------------------------------------------
+        # Capture upstream response body
+        # -------------------------------------------------------------------
 
         response_body = b""
 
@@ -370,72 +406,69 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
             response_body
         )
 
-        status_code = response.status_code
+        status_code = (
+            response.status_code
+        )
 
         try:
 
-            response_text = (
-                response_body.decode(
-                    "utf-8",
-                    errors="replace",
-                )
+            response_text = response_body.decode(
+                "utf-8",
+                errors="replace",
             )
 
         except Exception:
 
             response_text = None
 
-        # ===================================================================
+        # -------------------------------------------------------------------
         # RESPONSE-SIDE DETECTION
-        # ===================================================================
+        # -------------------------------------------------------------------
 
-        auth_findings = detect_auth_abuse(
+        # Authentication detector is response-aware for login endpoints.
+        auth_response_findings = detect_auth_abuse(
             request_event=request_event,
             response_status_code=status_code,
         )
 
-        sensitive_findings = (
-            detect_sensitive_data(
-                response_text
-            )
+        # Sensitive data exposure.
+        sensitive_findings = detect_sensitive_data(
+            response_text
         )
 
-        # Pass the HTTP status code so error responses such as
-        # 404/401/403/500 are not evaluated as successful endpoint
-        # response schemas.
-
-        excessive_findings = (
-            detect_excessive_data(
-                security_path,
-                response_text,
-                status_code,
-            )
+        # Excessive data exposure.
+        #
+        # Status code is passed so that error responses such as 404 do not
+        # get incorrectly classified as excessive data exposure.
+        excessive_findings = detect_excessive_data(
+            security_path,
+            response_text,
+            status_code,
         )
 
-        anomaly_findings = (
-            detect_behavioral_anomaly(
-                path=security_path,
-                response_size=response_size,
-                latency_ms=latency_ms,
-                status_code=status_code,
-            )
+        # Behavioral anomaly detection.
+        anomaly_findings = detect_behavioral_anomaly(
+            path=security_path,
+            response_size=response_size,
+            latency_ms=latency_ms,
+            status_code=status_code,
         )
 
-        # ===================================================================
-        # COMBINE ALL FINDINGS
-        # ===================================================================
+        # -------------------------------------------------------------------
+        # Combine every detector
+        # -------------------------------------------------------------------
 
         all_findings = (
             request_findings
-            + auth_findings
+            + auth_response_findings
             + sensitive_findings
             + excessive_findings
             + anomaly_findings
         )
 
-        # ===================================================================
-        # FINAL RISK
-        # ===================================================================
+        # -------------------------------------------------------------------
+        # Final risk calculation
+        # -------------------------------------------------------------------
 
         final_risk = calculate_risk(
             all_findings
@@ -445,8 +478,11 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
             final_risk
         )
 
-        response_event = {
+        # -------------------------------------------------------------------
+        # Build response event
+        # -------------------------------------------------------------------
 
+        response_event = {
             "request_id": request_id,
 
             "status_code": status_code,
@@ -456,15 +492,19 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
             "latency_ms": latency_ms,
         }
 
-        # ===================================================================
-        # BUILD SECURITY EVENT
-        # ===================================================================
+        # -------------------------------------------------------------------
+        # Build security event
+        # -------------------------------------------------------------------
 
         security_event = build_security_event(
             request_event=request_event,
+
             response_event=response_event,
+
             findings=all_findings,
+
             risk_result=final_risk,
+
             policy_result=final_policy,
         )
 
@@ -472,24 +512,20 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
             security_event
         )
 
-        # ===================================================================
-        # LIVE DASHBOARD BROADCAST
-        # ===================================================================
-
         await broadcast_event(
             security_event
         )
 
-        # ===================================================================
-        # LOG FINAL DECISION
-        # ===================================================================
-
         print()
-        print("=" * 70)
+        print(
+            "=" * 70
+        )
         print(
             "🐉 WYVRN — FINAL SECURITY DECISION"
         )
-        print("=" * 70)
+        print(
+            "=" * 70
+        )
 
         print(
             json.dumps(
@@ -498,18 +534,24 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
             )
         )
 
-        # ===================================================================
-        # RESPONSE-SIDE BLOCK
-        # ===================================================================
+        # -------------------------------------------------------------------
+        # BLOCK response
+        # -------------------------------------------------------------------
 
-        if final_policy["action"] == "BLOCK":
+        if final_policy[
+            "action"
+        ] == "BLOCK":
 
             print()
-            print("=" * 70)
+            print(
+                "=" * 70
+            )
             print(
                 "🛑 WYVRN BLOCKED RESPONSE"
             )
-            print("=" * 70)
+            print(
+                "=" * 70
+            )
 
             print(
                 f"Reason: "
@@ -518,22 +560,28 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
 
             return JSONResponse(
                 status_code=403,
+
                 content={
                     "error": (
                         "Response blocked by WYVRN"
                     ),
+
                     "request_id": request_id,
+
                     "risk_score": (
                         final_risk[
                             "risk_score"
                         ]
                     ),
+
                     "risk_level": (
                         final_risk[
                             "risk_level"
                         ]
                     ),
+
                     "action": "BLOCK",
+
                     "detections": (
                         final_risk[
                             "detections"
@@ -542,18 +590,24 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
                 },
             )
 
-        # ===================================================================
-        # RESPONSE-SIDE RATE LIMIT
-        # ===================================================================
+        # -------------------------------------------------------------------
+        # RATE_LIMIT response
+        # -------------------------------------------------------------------
 
-        if final_policy["action"] == "RATE_LIMIT":
+        if final_policy[
+            "action"
+        ] == "RATE_LIMIT":
 
             print()
-            print("=" * 70)
+            print(
+                "=" * 70
+            )
             print(
                 "⏳ WYVRN RATE LIMITED RESPONSE"
             )
-            print("=" * 70)
+            print(
+                "=" * 70
+            )
 
             print(
                 f"Reason: "
@@ -562,44 +616,54 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
 
             return JSONResponse(
                 status_code=429,
+
                 content={
                     "error": (
-                        "Response rate limited "
-                        "by WYVRN"
+                        "Response rate limited by WYVRN"
                     ),
+
                     "request_id": request_id,
+
                     "risk_score": (
                         final_risk[
                             "risk_score"
                         ]
                     ),
+
                     "risk_level": (
                         final_risk[
                             "risk_level"
                         ]
                     ),
+
                     "action": "RATE_LIMIT",
+
                     "detections": (
                         final_risk[
                             "detections"
                         ]
                     ),
                 },
+
                 headers={
                     "Retry-After": "10",
                 },
             )
 
-        # ===================================================================
-        # RETURN ORIGINAL RESPONSE
-        # ===================================================================
+        # -------------------------------------------------------------------
+        # Return original upstream response
+        # -------------------------------------------------------------------
 
         return Response(
             content=response_body,
+
             status_code=status_code,
+
             headers=dict(
                 response.headers
             ),
+
             media_type=response.media_type,
+
             background=response.background,
         )
