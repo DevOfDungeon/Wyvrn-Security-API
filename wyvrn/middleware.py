@@ -400,10 +400,15 @@ class WyvrnMiddleware(BaseHTTPMiddleware):
             )
         )
 
+        # Pass the HTTP status code so error responses such as
+        # 404/401/403/500 are not evaluated as successful endpoint
+        # response schemas.
+
         excessive_findings = (
             detect_excessive_data(
                 security_path,
                 response_text,
+                status_code,
             )
         )
 
