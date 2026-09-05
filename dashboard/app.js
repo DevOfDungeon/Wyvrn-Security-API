@@ -14,3 +14,12 @@ const DETECTIONS = [
     "EXCESSIVE_DATA_EXPOSURE",
     "BEHAVIORAL_ANOMALY"
 ];
+
+
+// =========================================================
+// DOM
+// =========================================================
+
+const $ = (selector) =>
+    document.querySelector(selector);
+
