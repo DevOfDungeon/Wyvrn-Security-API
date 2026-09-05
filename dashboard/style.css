@@ -1084,4 +1084,109 @@ body::before {
 
     color: var(--gold-bright);
 }
+/* =========================================================
+   SIMULATOR
+========================================================= */
+
+.simulator {
+    margin-top: 45px;
+
+    padding: 24px 20px;
+
+    border-radius: 22px;
+
+    background:
+        var(--gold-bright);
+
+    color: var(--black);
+
+    box-shadow:
+        12px 18px 35px rgba(0,0,0,0.4);
+
+    transform: rotate(1deg);
+}
+
+.simulator .eyebrow {
+    color: var(--black);
+
+    opacity: 0.55;
+}
+
+.simulator h2 {
+    margin:
+        12px
+        0;
+
+    font-family: "Bebas Neue";
+
+    font-size: 52px;
+
+    line-height: 0.77;
+}
+
+.simulator p {
+    font-size: 11px;
+
+    line-height: 1.5;
+
+    max-width: 260px;
+}
+
+.attack-buttons {
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 7px;
+
+    margin-top: 18px;
+}
+
+.attack-button {
+    border: 0;
+
+    background: var(--black);
+
+    color: var(--gold-pale);
+
+    padding:
+        10px
+        12px;
+
+    border-radius: 20px;
+
+    font-family: "DM Sans";
+
+    font-size: 7px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.7px;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.attack-button:hover {
+    transform:
+        translateY(-2px)
+        rotate(-1deg);
+
+    box-shadow:
+        4px 5px 0 var(--gold-deep);
+}
+
+.attack-button:active {
+    transform:
+        translateY(1px);
+}
+
+.attack-button.running {
+    opacity: 0.5;
+
+    pointer-events: none;
+}
 
