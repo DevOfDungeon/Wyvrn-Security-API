@@ -1,56 +1,39 @@
-from typing import Any, Dict, Set
-
-#============================================================
-#ACTIVE WEBSOCKET CLIENTS
-#============================================================
-connections: Set[Any] = set()
+from typing import Any, Dict, List
 
 
-#============================================================
-#CONNECTION MANAGEMENT
-#============================================================
-def add_connection(
-    websocket: Any,
-):
+def build_security_event(
+    request_event: Dict[str, Any],
+    response_event: Dict[str, Any] | None,
+    findings: List[Dict[str, Any]],
+    risk_result: Dict[str, Any],
+    policy_result: Dict[str, Any],
+) -> Dict[str, Any]:
 
-    connections.add(
-        websocket
-    )
+    return {
+        "request_id": request_event["request_id"],
+        "timestamp": request_event["timestamp"],
 
+        "request": {
+            "method": request_event["method"],
+            "path": request_event["path"],
+            "client_ip": request_event.get("client_ip"),
+        },
 
-def remove_connection(
-    websocket: Any,
-):
+        "response": response_event,
 
-    connections.discard(
-        websocket
-    )
+        "findings": findings,
 
+        "risk": {
+            "score": risk_result["risk_score"],
+            "level": risk_result["risk_level"],
+            "finding_count": risk_result["finding_count"],
+            "detections": risk_result["detections"],
+        },
 
-#============================================================
-#BROADCAST
-#============================================================
-async def broadcast_event(
-    event: Dict[str, Any],
-):
-
-    disconnected = []
-
-    for websocket in connections:
-
-        try:
-
-            await websocket.send_json(
-                event
-            )
-
-        except Exception:
-
-            disconnected.append(
-                websocket
-            )
-
-    for websocket in disconnected:
+        "policy": {
+            "action": policy_result["action"],
+            "reason": policy_result["reason"],
+        },
 
         connections.discard(
             websocket
