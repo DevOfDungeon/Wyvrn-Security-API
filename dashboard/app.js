@@ -1000,3 +1000,97 @@ async function runAttack(
     }
 
 }
+
+
+// =========================================================
+// VISUAL FEEDBACK
+// =========================================================
+
+function flashDashboard() {
+
+    const card =
+        $(".risk-card");
+
+
+    card.animate(
+        [
+            {
+                transform:
+                    "scale(1)"
+            },
+
+            {
+                transform:
+                    "scale(1.015)"
+            },
+
+            {
+                transform:
+                    "scale(1)"
+            }
+        ],
+        {
+            duration: 400,
+            easing: "ease-out"
+        }
+    );
+
+}
+
+
+// =========================================================
+// HELPERS
+// =========================================================
+
+function formatNumber(
+    value
+) {
+
+    return Number(
+        value || 0
+    ).toLocaleString();
+
+}
+
+
+function formatDetection(
+    detection
+) {
+
+    return String(
+        detection || "UNKNOWN"
+    )
+        .replaceAll(
+            "_",
+            " "
+        );
+
+}
+
+
+function formatTime(
+    timestamp
+) {
+
+    try {
+
+        const date =
+            new Date(timestamp);
+
+
+        return date.toLocaleTimeString(
+            [],
+            {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit"
+            }
+        );
+
+    } catch {
+
+        return "NOW";
+
+    }
+
+}
