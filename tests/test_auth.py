@@ -274,10 +274,7 @@ def test_json_body_username_is_detected():
     assert (
         findings[0]["metadata"]["username"]
         == "alice"
-    )from wyvrn.detectors.auth import (
-    FAILED_ATTEMPTS,
-    detect_auth_abuse,
-)
+    )
 
 
 def setup_function():
