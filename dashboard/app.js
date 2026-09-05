@@ -121,3 +121,53 @@ function updateStats() {
     calculateOverallRisk();
 
 }
+
+
+// =========================================================
+// EVENTS
+// =========================================================
+
+async function loadEvents() {
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_BASE}/api/events`
+            );
+
+        if (!response.ok) {
+            throw new Error(
+                "Events request failed"
+            );
+        }
+
+        const data =
+            await response.json();
+
+        events =
+            Array.isArray(data)
+                ? data
+                : data.events ?? [];
+
+        events =
+            events.slice(-100);
+
+        calculateDetectionCounts();
+
+        renderEvents();
+
+        calculateOverallRisk();
+
+        updateCampaign();
+
+    } catch (error) {
+
+        console.error(
+            "Could not load events:",
+            error
+        );
+
+    }
+
+}
