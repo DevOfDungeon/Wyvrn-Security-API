@@ -6,6 +6,10 @@ from fastapi.responses import Response
 from wyvrn.middleware import WyvrnMiddleware
 from wyvrn.store import get_events, get_event_count
 
+from wyvrn.policy import (
+    get_policies,
+    set_policies,
+)
 
 app = FastAPI(
     title="WYVRN Security API",
@@ -87,7 +91,66 @@ async def security_event(
         "error": "Security event not found",
         "request_id": request_id,
     }
+@app.get("/api/policies")
+async def policies():
+    return {
+        "policies": get_policies(),
+    }
 
+
+@app.put("/api/policies")
+async def replace_policies(
+    request: Request,
+):
+    try:
+        payload = await request.json()
+
+        policies = payload.get(
+            "policies"
+        )
+
+        if not isinstance(
+            policies,
+            dict,
+        ):
+            return Response(
+                content=(
+                    '{"error":"policies must be an object"}'
+                ),
+                status_code=400,
+                media_type="application/json",
+            )
+
+        updated = set_policies(
+            policies
+        )
+
+        return {
+            "status": "updated",
+            "policies": updated,
+        }
+
+    except ValueError as exc:
+
+        return Response(
+            content=(
+                '{"error":'
+                f'"{str(exc)}"'
+                "}"
+            ),
+            status_code=400,
+            media_type="application/json",
+        )
+
+    except Exception:
+
+        return Response(
+            content=(
+                '{"error":"Invalid JSON payload"}'
+            ),
+            status_code=400,
+            media_type="application/json",
+        )
 
 # ============================================================
 # PROXY
