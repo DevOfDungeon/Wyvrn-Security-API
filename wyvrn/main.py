@@ -2,6 +2,8 @@ import json
 
 import httpx
 
+from wyvrn.simulator import get_attack, list_attacks
+
 from fastapi import FastAPI, Request, WebSocket
 from fastapi.responses import Response
 
@@ -424,6 +426,63 @@ async def websocket_events(
             websocket
         )
 
+@app.get("/api/simulator/attacks")
+async def simulator_attacks():
+    return {
+        "attacks": list_attacks()
+    }
+
+
+@app.post("/api/simulator/run/{attack_name}")
+async def simulator_run(attack_name: str):
+    try:
+        attack = get_attack(attack_name)
+    except ValueError as exc:
+        return {
+            "success": False,
+            "error": str(exc),
+        }
+
+    method = attack["method"]
+    path = attack["path"]
+    query = attack.get("query", {})
+    headers = attack.get("headers", {})
+    body = attack.get("body")
+
+    url = f"http://127.0.0.1:9000{path}"
+
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.request(
+                method=method,
+                url=url,
+                params=query,
+                headers=headers,
+                json=body,
+                timeout=10.0,
+            )
+
+        return {
+            "success": True,
+            "attack": attack_name,
+            "name": attack["name"],
+            "request": {
+                "method": method,
+                "path": path,
+                "query": query,
+            },
+            "response": {
+                "status_code": response.status_code,
+                "body": response.text[:2000],
+            },
+        }
+
+    except Exception as exc:
+        return {
+            "success": False,
+            "attack": attack_name,
+            "error": str(exc),
+        }
 
 # ============================================================
 # TARGET API PROXY
