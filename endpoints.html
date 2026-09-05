@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>WYVRN Endpoint Explorer</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Inter,sans-serif;
+}
+
+body{
+background:#0b1020;
+color:white;
+padding:30px;
+}
+
+h1{
+margin-bottom:20px;
+}
+
+.container{
+display:grid;
+grid-template-columns:300px 1fr;
+gap:20px;
+}
+
+.card{
+background:#111827;
+padding:20px;
+border-radius:15px;
+border:1px solid #1f2937;
+}
+
+.endpoint{
+padding:15px;
+margin-bottom:10px;
+background:#1f2937;
+border-radius:10px;
+cursor:pointer;
+}
+
+.endpoint:hover{
+background:#2563eb;
+}
+
+.detail-row{
+margin:15px 0;
+}
+
+.badge{
+display:inline-block;
+padding:8px 12px;
+border-radius:20px;
+background:#dc2626;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<h1>Endpoint Explorer</h1>
+
+<div class="container">
+
+<div class="card">
+
+<h3>Endpoints</h3>
+
+<div class="endpoint" onclick="showEndpoint(1)">
+GET /api/users/:id
+</div>
+
+<div class="endpoint" onclick="showEndpoint(2)">
+POST /api/login
+</div>
+
+<div class="endpoint" onclick="showEndpoint(3)">
+GET /api/orders
+</div>
+
+</div>
+
+<div class="card">
+
+<h2 id="endpointTitle">
+Select Endpoint
+</h2>
+
+<div class="detail-row">
+Risk Score:
+<span id="riskScore">--</span>
+</div>
+
+<div class="detail-row">
+Severity:
+<span id="severity">--</span>
+</div>
+
+<div class="detail-row">
+Issue:
+<span id="issue">--</span>
+</div>
+
+<div class="detail-row">
+Reason:
+<p id="reason"></p>
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+function showEndpoint(id){
+
+if(id===1){
+
+document.getElementById("endpointTitle")
+.innerText="GET /api/users/:id";
+
+document.getElementById("riskScore")
+.innerText="87";
+
+document.getElementById("severity")
+.innerHTML="<span class='badge'>Critical</span>";
+
+document.getElementById("issue")
+.innerText="Broken Object Level Authorization";
+
+document.getElementById("reason")
+.innerText=
+"User IDs can be modified allowing access to other accounts.";
+
+}
+
+if(id===2){
+
+document.getElementById("endpointTitle")
+.innerText="POST /api/login";
+
+document.getElementById("riskScore")
+.innerText="73";
+
+document.getElementById("severity")
+.innerHTML="<span class='badge'>High</span>";
+
+document.getElementById("issue")
+.innerText="Brute Force Risk";
+
+document.getElementById("reason")
+.innerText=
+"Missing rate limiting detected.";
+
+}
+
+if(id===3){
+
+document.getElementById("endpointTitle")
+.innerText="GET /api/orders";
+
+document.getElementById("riskScore")
+.innerText="65";
+
+document.getElementById("severity")
+.innerHTML="<span class='badge'>Medium</span>";
+
+document.getElementById("issue")
+.innerText="Excessive Data Exposure";
+
+document.getElementById("reason")
+.innerText=
+"Sensitive order metadata exposed.";
+
+}
+
+}
+
+</script>
+
+</body>
+</html>
