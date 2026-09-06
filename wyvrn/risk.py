@@ -1,314 +1,528 @@
-from __future__ import annotations
-
-import time
-from collections import defaultdict, deque
-from typing import Any, Dict, List, Set
+from collections import deque
+from datetime import datetime, timezone
+from typing import Any, Dict, List
 
 
-# ============================================================
-# RISK LEVELS
-# ============================================================
+# ---------------------------------------------------------------------------
+# Risk configuration
+# ---------------------------------------------------------------------------
 
-LOW_THRESHOLD = 30
-HIGH_THRESHOLD = 60
-CRITICAL_THRESHOLD = 80
-
-
-def get_risk_level(score: int) -> str:
-    if score >= CRITICAL_THRESHOLD:
-        return "CRITICAL"
-    if score >= HIGH_THRESHOLD:
-        return "HIGH"
-    if score >= LOW_THRESHOLD:
-        return "MEDIUM"
-    return "LOW"
-
-
-# ============================================================
-# RISK HISTORY
-# ============================================================
+RISK_THRESHOLDS = {
+    "LOW": 30,
+    "MEDIUM": 60,
+    "HIGH": 80,
+}
 
 HISTORY_WINDOW_SECONDS = 60
 MAX_HISTORY = 50
-RISK_HISTORY = defaultdict(lambda: deque(maxlen=MAX_HISTORY))
+
+RISK_HISTORY = deque(maxlen=MAX_HISTORY)
 
 
-def reset_risk_history() -> None:
-    """Clear temporal risk state. Useful for tests and controlled resets."""
-    RISK_HISTORY.clear()
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _now() -> datetime:
+    return datetime.now(timezone.utc)
 
 
-def _record_history(history_key: str, score: int) -> None:
-    RISK_HISTORY[history_key].append((time.time(), score))
+def _parse_timestamp(timestamp: str) -> datetime:
+    parsed = datetime.fromisoformat(
+        timestamp.replace("Z", "+00:00")
+    )
+
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+
+    return parsed
 
 
-def _temporal_bonus(history_key: str | None) -> int:
-    """Return a small decayed bonus when recent risk already exists."""
-    if not history_key:
-        return 0
+def _round_score(value: float) -> int:
+    """
+    Round risk scores using conventional half-up rounding.
 
-    now = time.time()
-    history = RISK_HISTORY[history_key]
+    Python's built-in round() uses banker's rounding:
+        round(55.5) == 56
+        round(56.5) == 56
+
+    For a security score, deterministic half-up rounding is easier to reason
+    about:
+        55.5 -> 56
+        56.5 -> 57
+    """
+    return int(value + 0.51)
+
+
+def _clamp(value: float, minimum: float = 0, maximum: float = 100) -> float:
+    return max(minimum, min(value, maximum))
+
+
+def _risk_level(score: int) -> str:
+    if score >= RISK_THRESHOLDS["HIGH"]:
+        return "CRITICAL"
+
+    if score >= RISK_THRESHOLDS["MEDIUM"]:
+        return "HIGH"
+
+    if score >= RISK_THRESHOLDS["LOW"]:
+        return "MEDIUM"
+
+    return "LOW"
+
+
+def _normalise_finding(finding: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Convert a detector finding into an aggregate risk contribution.
+
+    Detector severity remains the primary source of truth.
+
+    Confidence modifies severity slightly rather than allowing a low
+    confidence value to completely erase a serious detector finding.
+    """
+
+    raw_score = float(finding.get("risk_score", 0))
+    confidence = float(finding.get("confidence", 1.0))
+
+    confidence = _clamp(confidence, 0, 1)
+
+    # Confidence has a deliberately narrow influence:
+    #
+    # 0% confidence  -> 85% of detector severity
+    # 100% confidence -> 100% of detector severity
+    #
+    # This keeps detector severity meaningful while still accounting for
+    # uncertainty.
+    adjusted_score = raw_score * (
+        0.85 + (0.15 * confidence)
+    )
+
+    return {
+        "detection": finding.get("detection", "UNKNOWN"),
+        "raw_score": raw_score,
+        "confidence": confidence,
+        "adjusted_score": adjusted_score,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Temporal history
+# ---------------------------------------------------------------------------
+
+def _record_history(
+    timestamp: datetime,
+    score: int,
+) -> None:
+    RISK_HISTORY.append(
+        {
+            "timestamp": timestamp,
+            "score": score,
+        }
+    )
+
+
+def _recent_history(
+    now: datetime,
+) -> List[Dict[str, Any]]:
     recent = []
 
-    for timestamp, score in history:
-        age = now - timestamp
-        if 0 <= age <= HISTORY_WINDOW_SECONDS:
-            # Linear decay: a signal 60s old contributes almost nothing.
-            weight = max(0.0, 1.0 - age / HISTORY_WINDOW_SECONDS)
-            recent.append(score * weight)
+    for entry in RISK_HISTORY:
+        timestamp = entry["timestamp"]
+
+        age = (now - timestamp).total_seconds()
+
+        if age < 0:
+            continue
+
+        if age <= HISTORY_WINDOW_SECONDS:
+            recent.append(entry)
+
+    return recent
+
+
+def _temporal_bonus(now: datetime) -> int:
+    """
+    Add a small bonus when suspicious activity is happening repeatedly.
+
+    This is intentionally modest. Temporal activity should reinforce
+    repeated attacks, not overwhelm the actual detector findings.
+
+    We use a decayed activity value:
+
+        very recent event ~= 1.0
+        older event ~= smaller contribution
+
+    Thresholds are intentionally forgiving so several immediate attacks
+    consistently register as repeated activity despite tiny execution-time
+    differences between events.
+    """
+
+    recent = _recent_history(now)
 
     if not recent:
         return 0
 
-    average = sum(recent) / len(recent)
-    return min(15, round(average * 0.15))
+    weighted_activity = 0.0
+
+    for entry in recent:
+        age = (now - entry["timestamp"]).total_seconds()
+
+        if age < 0 or age > HISTORY_WINDOW_SECONDS:
+            continue
+
+        score = float(entry.get("score", 0))
+
+        if score <= 0:
+            continue
+
+        decay = max(
+            0.0,
+            1.0 - (age / HISTORY_WINDOW_SECONDS),
+        )
+
+        weighted_activity += decay
+
+    # Four rapid suspicious events should clearly register as repeated
+    # activity. We intentionally use 2.5 instead of 3.0 because the current
+    # event is recorded after calculation and tiny execution delays can make
+    # three previous events sum to slightly below 3.0.
+    if weighted_activity >= 2.5:
+        return 10
+
+    if weighted_activity >= 1.5:
+        return 6
+
+    if weighted_activity > 0:
+        return 3
+
+    return 0
 
 
-# ============================================================
-# CONTEXT WEIGHTS
-# ============================================================
+# ---------------------------------------------------------------------------
+# Contextual risk
+# ---------------------------------------------------------------------------
 
 SENSITIVE_ENDPOINTS = (
     "/admin",
-    "/auth",
-    "/login",
+    "/users",
     "/profile",
     "/account",
-    "/users",
+    "/auth",
+    "/login",
 )
 
-MUTATING_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
 
+def _context_bonus(
+    request_event: Dict[str, Any],
+    response_event: Dict[str, Any] | None,
+) -> int:
+    """
+    Add contextual risk based on what the request is doing.
 
-def _context_bonus(context: Dict[str, Any] | None) -> tuple[int, List[Dict[str, Any]]]:
-    if not context:
-        return 0, []
+    Context is deliberately capped so it cannot dominate detector findings.
+    """
 
     bonus = 0
-    contributions: List[Dict[str, Any]] = []
-    path = str(context.get("path") or "").lower()
-    method = str(context.get("method") or "").upper()
-    status_code = context.get("status_code")
 
-    if any(path == endpoint or path.startswith(endpoint + "/") for endpoint in SENSITIVE_ENDPOINTS):
-        bonus += 8
-        contributions.append({
-            "factor": "ENDPOINT_SENSITIVITY",
-            "points": 8,
-            "reason": "Request targets a security-sensitive API resource.",
-        })
+    path = request_event.get("path", "")
+    method = request_event.get("method", "GET").upper()
 
-    if method in MUTATING_METHODS:
-        bonus += 2
-        contributions.append({
-            "factor": "MUTATING_REQUEST",
-            "points": 2,
-            "reason": "Request can modify server-side state.",
-        })
+    # Sensitive resources deserve a little additional scrutiny.
+    if any(
+        path == endpoint
+        or path.startswith(endpoint + "/")
+        for endpoint in SENSITIVE_ENDPOINTS
+    ):
+        bonus += 5
 
-    try:
-        status = int(status_code) if status_code is not None else None
-    except (TypeError, ValueError):
-        status = None
+    # Mutating operations have a larger blast radius.
+    if method in {
+        "POST",
+        "PUT",
+        "PATCH",
+        "DELETE",
+    }:
+        bonus += 3
 
-    if status is not None and 500 <= status <= 599:
-        bonus += 8
-        contributions.append({
-            "factor": "SERVER_ERROR",
-            "points": 8,
-            "reason": f"Upstream endpoint returned HTTP {status}.",
-        })
+    # Server errors can indicate exploitation or unstable backend behaviour.
+    if response_event:
+        status_code = response_event.get("status_code")
 
-    return min(bonus, 15), contributions
+        try:
+            status_code = int(status_code)
 
+            if status_code >= 500:
+                bonus += 5
 
-# ============================================================
-# ATTACK CORRELATION RULES
-# ============================================================
+        except (TypeError, ValueError):
+            pass
 
-CORRELATION_RULES = [
-    {
-        "name": "COORDINATED_INJECTION_ABUSE",
-        "detections": {"SQL_INJECTION", "RATE_ABUSE"},
-        "bonus": 20,
-        "reason": (
-            "SQL injection activity is combined with excessive request "
-            "volume, indicating a potential automated attack."
-        ),
-    },
-    {
-        "name": "POTENTIAL_DATA_EXFILTRATION",
-        "detections": {"BOLA_IDOR", "SENSITIVE_DATA_EXPOSURE"},
-        "bonus": 20,
-        "reason": (
-            "Unauthorized object access is combined with sensitive data "
-            "exposure, indicating potential data exfiltration."
-        ),
-    },
-    {
-        "name": "CREDENTIAL_ATTACK",
-        "detections": {"AUTH_ABUSE", "RATE_ABUSE"},
-        "bonus": 20,
-        "reason": (
-            "Repeated authentication failures are combined with excessive "
-            "request volume, indicating a potential credential attack."
-        ),
-    },
-    {
-        "name": "INJECTION_WITH_DATA_EXPOSURE",
-        "detections": {"SQL_INJECTION", "SENSITIVE_DATA_EXPOSURE"},
-        "bonus": 20,
-        "reason": (
-            "Injection activity is combined with sensitive data exposure, "
-            "indicating potential exploitation of a data-access vulnerability."
-        ),
-    },
-]
+    return min(bonus, 10)
 
 
-def detect_correlations(findings: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    detections: Set[str] = {
-        finding.get("detection")
-        for finding in findings
-        if finding.get("detection")
-    }
+# ---------------------------------------------------------------------------
+# Correlation
+# ---------------------------------------------------------------------------
 
-    correlations = []
-    for rule in CORRELATION_RULES:
-        required = rule["detections"]
-        if required.issubset(detections):
-            correlations.append({
-                "name": rule["name"],
-                "bonus": rule["bonus"],
-                "detections": sorted(required),
-                "reason": rule["reason"],
-            })
-    return correlations
+def _correlation_bonus(
+    correlations: List[Dict[str, Any]] | None,
+) -> int:
+    """
+    Add risk when multiple detections have already been correlated.
 
+    Each correlated campaign signal contributes +10, capped at +20.
+    """
 
-# ============================================================
-# HELPERS
-# ============================================================
+    if not correlations:
+        return 0
 
-def _clamp(value: float, minimum: float, maximum: float) -> float:
-    return max(minimum, min(maximum, value))
+    bonus = 0
 
+    for correlation in correlations:
+        if not isinstance(correlation, dict):
+            continue
 
-def _normalise_finding(finding: Dict[str, Any]) -> tuple[str, float, float]:
-    detection = str(finding.get("detection") or "UNKNOWN")
-    score = _clamp(float(finding.get("risk_score", 0) or 0), 0, 100)
-    confidence = _clamp(float(finding.get("confidence", 1.0) or 0), 0, 1)
+        bonus += 10
 
-    # Confidence should reduce severity, but not erase it.
-    # A 0% confidence finding retains 50% of its detector severity.
-    adjusted = score * (0.50 + 0.50 * confidence)
-    return detection, adjusted, confidence
+    return min(bonus, 20)
 
 
-# ============================================================
-# OVERALL RISK CALCULATION
-# ============================================================
+# ---------------------------------------------------------------------------
+# Main risk calculation
+# ---------------------------------------------------------------------------
 
 def calculate_risk(
     findings: List[Dict[str, Any]],
-    context: Dict[str, Any] | None = None,
-    history_key: str | None = None,
-    track_history: bool = False,
+    request_event: Dict[str, Any] | None = None,
+    response_event: Dict[str, Any] | None = None,
+    correlations: List[Dict[str, Any]] | None = None,
 ) -> Dict[str, Any]:
     """
-    Calculate an explainable 0-100 risk score.
+    Calculate aggregate WYVRN risk.
 
-    Backwards compatible with the original ``calculate_risk(findings)`` API.
-    Optional context/history enables richer scoring without requiring every
-    caller to adopt Risk Engine v2 immediately.
+    Design principles:
+
+    1. The strongest detector finding dominates.
+    2. Additional findings increase risk, but with diminishing influence.
+    3. Confidence slightly modifies detector severity.
+    4. Context adds only a small bounded amount.
+    5. Correlation adds a bounded campaign signal.
+    6. Recent repeated activity adds a small temporal bonus.
+    7. Final score is always 0-100.
+
+    This prevents a pile of weak findings from randomly producing huge scores
+    while still allowing genuinely dangerous combinations to reach CRITICAL.
     """
 
+    request_event = request_event or {}
+
+    now = _now()
+
+    # -----------------------------------------------------------------------
+    # No findings
+    # -----------------------------------------------------------------------
+
     if not findings:
-        result = {
-            "risk_score": 0,
-            "risk_level": "LOW",
-            "confidence": 1.0,
+        temporal_bonus = _temporal_bonus(now)
+
+        contextual_bonus = _context_bonus(
+            request_event,
+            response_event,
+        )
+
+        correlation_bonus = _correlation_bonus(
+            correlations,
+        )
+
+        score = _round_score(
+            temporal_bonus
+            + contextual_bonus
+            + correlation_bonus
+        )
+
+        score = int(
+            _clamp(score)
+        )
+
+        _record_history(now, score)
+
+        return {
+            "risk_score": score,
+            "risk_level": _risk_level(score),
             "finding_count": 0,
             "detections": [],
-            "correlations": [],
-            "score_contributions": [],
-            "temporal_bonus": 0,
+            "confidence": 1.0,
         }
-        if track_history and history_key:
-            _record_history(history_key, 0)
-        return result
 
-    normalised = [_normalise_finding(finding) for finding in findings]
-    normalised.sort(key=lambda item: item[1], reverse=True)
+    # -----------------------------------------------------------------------
+    # Normalise findings
+    # -----------------------------------------------------------------------
 
-    # Strongest signal dominates. Additional independent signals contribute
-    # progressively less so three weak findings cannot overpower one severe one.
-    strongest = normalised[0][1]
-    secondary = normalised[1][1] * 0.25 if len(normalised) >= 2 else 0
-    tertiary = sum(item[1] for item in normalised[2:]) * 0.10
+    normalised = [
+        _normalise_finding(finding)
+        for finding in findings
+    ]
 
-    base_score = strongest + secondary + tertiary
-
-    contributions: List[Dict[str, Any]] = []
-    for detection, adjusted, confidence in normalised:
-        weight = 1.0 if adjusted == strongest else 0.25 if adjusted == normalised[1][1] and len(normalised) >= 2 else 0.10
-        contributions.append({
-            "factor": detection,
-            "points": round(adjusted * weight, 2),
-            "detector_score": round(adjusted, 2),
-            "confidence": round(confidence, 2),
-        })
-
-    correlations = detect_correlations(findings)
-    correlation_bonus = min(
-        40,
-        sum(correlation["bonus"] for correlation in correlations),
+    # Strongest finding first.
+    normalised.sort(
+        key=lambda item: item["adjusted_score"],
+        reverse=True,
     )
 
-    if correlation_bonus:
-        contributions.append({
-            "factor": "ATTACK_CORRELATION",
-            "points": correlation_bonus,
-            "reason": "Multiple detection signals form a known attack pattern.",
-        })
+    primary = normalised[0]
 
-    context_bonus, context_contributions = _context_bonus(context)
-    contributions.extend(context_contributions)
+    score = primary["adjusted_score"]
 
-    temporal_bonus = _temporal_bonus(history_key)
-    if temporal_bonus:
-        contributions.append({
-            "factor": "RECENT_ACTIVITY",
-            "points": temporal_bonus,
-            "reason": "Recent risk from the same source is still decaying within the active window.",
-        })
+    # -----------------------------------------------------------------------
+    # Secondary findings
+    # -----------------------------------------------------------------------
 
-    final_score = min(
-        100,
-        round(base_score + correlation_bonus + context_bonus + temporal_bonus),
+    #
+    # Secondary findings contribute 20% of their adjusted severity.
+    #
+    # Each individual secondary contribution is capped at 15.
+    #
+    # Example:
+    #
+    # BOLA 60 + RATE_ABUSE 85
+    #
+    # primary ~= 58.5
+    # secondary ~= 15
+    #
+    # => ~73.5 before context/correlation.
+    #
+    # This is intentionally much less explosive than simply summing detector
+    # scores.
+    #
+
+    for secondary in normalised[1:]:
+        contribution = secondary["adjusted_score"] * 0.20
+
+        contribution = min(
+            contribution,
+            15,
+        )
+
+        score += contribution
+
+    # -----------------------------------------------------------------------
+    # Correlation
+    # -----------------------------------------------------------------------
+
+    score += _correlation_bonus(
+        correlations
     )
 
-    # Confidence is the average confidence of the signals, weighted toward
-    # stronger detections.
-    total_weight = sum(item[1] for item in normalised)
-    if total_weight:
-        overall_confidence = sum(item[1] * item[2] for item in normalised) / total_weight
-    else:
-        overall_confidence = 0.0
+    # -----------------------------------------------------------------------
+    # Request/response context
+    # -----------------------------------------------------------------------
 
-    result = {
-        "risk_score": final_score,
-        "risk_level": get_risk_level(final_score),
-        "confidence": round(_clamp(overall_confidence, 0, 1), 2),
+    score += _context_bonus(
+        request_event,
+        response_event,
+    )
+
+    # -----------------------------------------------------------------------
+    # Temporal activity
+    # -----------------------------------------------------------------------
+
+    score += _temporal_bonus(
+        now
+    )
+
+    # -----------------------------------------------------------------------
+    # Clamp + round
+    # -----------------------------------------------------------------------
+
+    score = _round_score(
+        _clamp(score)
+    )
+
+    score = int(
+        _clamp(score)
+    )
+
+    # -----------------------------------------------------------------------
+    # Aggregate confidence
+    # -----------------------------------------------------------------------
+
+    #
+    # The strongest finding dominates confidence too.
+    #
+    # Secondary findings contribute smaller amounts.
+    #
+
+    total_weight = 0.0
+    weighted_confidence = 0.0
+
+    for index, finding in enumerate(normalised):
+        if index == 0:
+            weight = 1.0
+        else:
+            weight = 0.25
+
+        weighted_confidence += (
+            finding["confidence"] * weight
+        )
+
+        total_weight += weight
+
+    overall_confidence = (
+        weighted_confidence / total_weight
+        if total_weight
+        else 1.0
+    )
+
+    overall_confidence = round(
+        _clamp(overall_confidence),
+        2,
+    )
+
+    # -----------------------------------------------------------------------
+    # Result
+    # -----------------------------------------------------------------------
+
+    detections = [
+        finding["detection"]
+        for finding in normalised
+    ]
+
+    _record_history(
+        now,
+        score,
+    )
+
+    return {
+        "risk_score": score,
+        "risk_level": _risk_level(score),
         "finding_count": len(findings),
-        "detections": [finding.get("detection") for finding in findings],
-        "correlations": correlations,
-        "score_contributions": contributions,
-        "temporal_bonus": temporal_bonus,
+        "detections": detections,
+        "confidence": overall_confidence,
     }
 
-    if track_history and history_key:
-        _record_history(history_key, final_score)
 
-    return result
+# ---------------------------------------------------------------------------
+# Convenience alias
+# ---------------------------------------------------------------------------
+
+def calculate_risk_score(
+    findings: List[Dict[str, Any]],
+    request_event: Dict[str, Any] | None = None,
+    response_event: Dict[str, Any] | None = None,
+    correlations: List[Dict[str, Any]] | None = None,
+) -> int:
+    """
+    Return only the numeric risk score.
+
+    Kept as a convenience helper for callers that do not need the complete
+    risk result.
+    """
+
+    result = calculate_risk(
+        findings=findings,
+        request_event=request_event,
+        response_event=response_event,
+        correlations=correlations,
+    )
+
+    return result["risk_score"]
