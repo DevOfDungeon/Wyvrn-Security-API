@@ -72,3 +72,42 @@ BLOCK
                                   ▼
                               DASHBOARD
 ```
+
+## Project Structure
+
+```text
+Trojan-Horses/
+│
+├── target_api/
+│   └── main.py
+│
+├── wyvrn/
+│   ├── main.py
+│   ├── middleware.py
+│   ├── risk.py
+│   ├── policy.py
+│   ├── events.py
+│   ├── store.py
+│   ├── ws.py
+│   ├── correlation.py
+│   │
+│   └── detectors/
+│       ├── auth.py
+│       ├── bola.py
+│       ├── injection.py
+│       ├── rate_limit.py
+│       ├── sensitive_data.py
+│       ├── excessive_data.py
+│       └── anomaly.py
+│
+├── dashboard/
+│   ├── index.html
+│   ├── style.css
+│   └── app.js
+│
+├── tests/
+├── requirements.txt
+├── pytest.ini
+├── README.md
+└── LICENSE
+```
