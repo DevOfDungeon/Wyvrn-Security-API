@@ -96,7 +96,7 @@ def detect_rate_abuse(
             make_finding(
                 detection="RATE_ABUSE",
                 confidence=0.95,
-                risk_score=70,
+                risk_score=85,
                 reason=(
                     f"Client {client_ip} generated "
                     f"{request_count} requests within "
