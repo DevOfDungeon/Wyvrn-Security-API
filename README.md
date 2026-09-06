@@ -1,17 +1,16 @@
-# Trojan-Horses
 # WYVRN Security API
 
 > Runtime API Security, Threat Detection & Automated Threat Control
 
-WYVRN is a runtime API security layer designed to detect, score, correlate, and respond to API security threats in real time.
+WYVRN is a runtime API security layer that sits between clients and an API to detect, assess, and respond to security threats in real time.
 
-It sits between a client and an API, observes requests and responses, runs multiple security detectors, calculates a contextual risk score, applies an automated security policy, stores the resulting security event, and streams live events to the dashboard.
+Instead of relying only on static vulnerability detection, WYVRN analyzes API requests and responses, calculates contextual risk, applies automated security policies, correlates related events, and streams security activity to a live dashboard.
 
 ---
 
-## What WYVRN Does
+## What WYVRN Detects
 
-WYVRN continuously analyzes API traffic and detects threats including:
+WYVRN currently detects:
 
 - SQL Injection
 - BOLA / IDOR
@@ -21,34 +20,55 @@ WYVRN continuously analyzes API traffic and detects threats including:
 - Excessive Data Exposure
 - Behavioral Anomalies
 
-Each request passes through a security pipeline:
+Security decisions are based on contextual risk and can result in:
+ALLOW
+MONITOR
+RATE LIMIT
+BLOCK
 
-text
-Client
-  │
-  ▼
-WYVRN Security Layer
-  │
-  ├── Request Detection
-  │
-  ├── Risk Scoring
-  │
-  ├── Policy Decision
-  │
-  ├── Target API
-  │       │
-  │       ▼
-  │   Response
-  │
-  ├── Response Detection
-  │
-  ├── Risk Recalculation
-  │
-  ├── Attack Correlation
-  │
-  ├── Event Store
-  │
-  └── WebSocket Event Stream
-          │
-          ▼
-      Dashboard
+## Architecture
+
+```text
+                    CLIENT
+                       │
+                       ▼
+              ┌─────────────────┐
+              │ WYVRN MIDDLEWARE│
+              └────────┬────────┘
+                       │
+              ┌────────▼────────┐
+              │    DETECTORS    │
+              └────────┬────────┘
+                       │
+              ┌────────▼────────┐
+              │   RISK ENGINE   │
+              └────────┬────────┘
+                       │
+              ┌────────▼────────┐
+              │  POLICY ENGINE  │
+              └────────┬────────┘
+                       │
+              ALLOW / MONITOR /
+             RATE_LIMIT / BLOCK
+                       │
+                       ▼
+                ┌─────────────┐
+                │  TARGET API │
+                └──────┬──────┘
+                       │
+                       ▼
+                   RESPONSE
+                       │
+                       ▼
+              RESPONSE DETECTORS
+                       │
+                       ▼
+                RISK + CORRELATION
+                       │
+             ┌─────────┼─────────┐
+             ▼         ▼         ▼
+         EVENT STORE  CAMPAIGN  WEBSOCKET
+                                  │
+                                  ▼
+                              DASHBOARD
+```
