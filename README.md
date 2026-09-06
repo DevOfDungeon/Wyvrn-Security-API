@@ -95,7 +95,7 @@ Multiple findings are combined with confidence and contextual factors to produce
 The policy engine converts risk into an enforcement action:
 
 ```text
-ALLOW → MONITOR → RATE_LIMIT → BLOCK
+ALLOW  MONITOR  RATE_LIMIT  BLOCK
 ```
 
 ### Behavioral Analysis
@@ -116,20 +116,14 @@ Security events are exposed through REST APIs and a WebSocket stream for live da
 
 ```text
 Trojan-Horses/
-│
 ├── target_api/
 │   └── main.py
-│
 ├── wyvrn/
-│   ├── main.py
 │   ├── middleware.py
 │   ├── risk.py
 │   ├── policy.py
-│   ├── events.py
-│   ├── store.py
-│   ├── ws.py
 │   ├── correlation.py
-│   │
+│   ├── simulator.py
 │   └── detectors/
 │       ├── auth.py
 │       ├── bola.py
@@ -138,17 +132,21 @@ Trojan-Horses/
 │       ├── sensitive_data.py
 │       ├── excessive_data.py
 │       └── anomaly.py
-│
-├── dashboard/
-│   ├── index.html
-│   ├── style.css
-│   └── app.js
-│
 ├── tests/
+│   ├── test_auth.py
+│   ├── test_detectors.py
+│   ├── test_risk.py
+│   ├── test_policy.py
+│   ├── test_anomaly.py
+│   └__ test_excessive_data.py
+|   |__ test_injection.py
+|   |__ test_integration.py
+|   |__ test_sensitive_data.py
+|   |__ test_wyvrn.py
+|
 ├── requirements.txt
 ├── pytest.ini
-├── README.md
-└── LICENSE
+└── README.md
 ```
 
 ---
@@ -336,19 +334,6 @@ WYVRN combines detector findings, confidence, behavioral context, endpoint conte
 
 ---
 
-## Team
-
-### Trojan Horses
-
-Cybersecurity project focused on runtime API protection, automated threat detection, risk-based enforcement, behavioral analysis, and real-time security observability.
-
----
-
-## License
-
-See `LICENSE` for license information.
-
----
 
 # WYVRN
 
